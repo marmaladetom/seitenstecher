@@ -2,8 +2,16 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Seitenstecher Coach</title>
+<!-- PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Seitenstecher">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0c0c0f">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPgogIDx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiCiAgICAgICAgZmlsbD0iIzBjMGMwZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9ImF1dG8iPlM8L3RleHQ+Cjwvc3ZnPg==">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPgogIDx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiCiAgICAgICAgZmlsbD0iIzBjMGMwZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9ImF1dG8iPlM8L3RleHQ+Cjwvc3ZnPg==">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -116,17 +124,20 @@
       transition: max-height 0.3s ease;
     }
     .sidebar.open { max-height: 80vh; overflow-y: auto; }
-    .main { flex: 1; min-height: 0; }
+    .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .chat-panel { flex: 1; min-height: 0; }
+    .messages { flex: 1; min-height: 0; }
     .logo-text { font-size: 14px; }
     .logo-sub { display: none; }
     #menuToggle { display: flex !important; }
     .msg-bubble { max-width: 90%; font-size: 13px; }
-    .tab { font-size: 11px; padding: 6px 10px; }
+    .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
     .week-nav { grid-template-columns: repeat(7, 1fr); }
     #calendarGrid { grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
     .stat-grid { grid-template-columns: 1fr 1fr; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area { padding: 10px 12px; }
+    .input-area {
+    padding-bottom: max(16px, env(safe-area-inset-bottom)); padding: 10px 12px; }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
   }
@@ -334,7 +345,853 @@
     padding: 12px 20px 0;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
   }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 8px 16px;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+    border-radius: 6px 6px 0 0;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Messages */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .msg { display: flex; gap: 12px; max-width: 100%; }
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+  }
+  .msg-avatar.coach { background: var(--accent); color: #000; }
+  .msg-avatar.user-av { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+
+  .msg-bubble {
+    max-width: 75%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    line-height: 1.65;
+    font-size: 16px;
+  }
+  .msg.coach .msg-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+    color: var(--text);
+  }
+  .msg.user .msg-bubble {
+    background: var(--accent);
+    color: #000;
+    border-top-right-radius: 4px;
+  }
+
+  .msg-bubble strong { font-weight: 600; }
+  .msg-bubble .metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    margin: 1px 2px;
+  }
+  .msg.user .msg-bubble .metric { background: rgba(0,0,0,0.12); }
+
+  /* Data cards inside messages */
+  .data-card {
+    margin: 10px 0 4px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .data-card-header {
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .data-card-body {
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .dc-stat { text-align: center; }
+  .dc-val { font-family: 'DM Mono', monospace; font-size: 19px; font-weight: 500; }
+  .dc-key { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .zone-bar {
+    margin: 8px 0 4px;
+    display: flex;
+    gap: 2px;
+    height: 6px;
+  }
+  .zone-seg {
+    border-radius: 3px;
+    height: 100%;
+    transition: opacity 0.2s;
+  }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    border-top-left-radius: 4px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: typingPulse 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingPulse {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-3px); }
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    resize: none;
+    outline: none;
+    min-height: 42px;
+    max-height: 120px;
+    transition: border-color 0.15s;
+    line-height: 1.5;
+  }
+  .chat-input:focus { border-color: var(--border2); }
+  .chat-input::placeholder { color: var(--muted2); }
+  .send-btn {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.4; cursor: default; }
+  .input-hints {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    max-height: 58px;
+    overflow: hidden;
+  }
+  .hint-chip {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .hint-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Strava activities panel */
+  .activities-panel {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .activities-panel.active { display: flex; }
+  .chat-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  .chat-panel.hidden { display: none; }
+
+  .activity-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .activity-card:hover { border-color: var(--border2); }
+  .act-type {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+  }
+  .act-type.run { background: rgba(232,255,71,0.12); }
+  .act-type.ride { background: rgba(74,158,255,0.12); }
+  .act-type.swim { background: rgba(62,207,110,0.12); }
+  .act-name { font-size: 16px; font-weight: 500; }
+  .act-date { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
+  .act-stats {
+    display: flex;
+    gap: 16px;
+    text-align: right;
+  }
+  .act-stat-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+  .act-stat-lbl { font-size: 12px; color: var(--muted); }
+  .loading-acts {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+  }
+  .connect-prompt {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .connect-prompt h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .connect-prompt p { font-size: 16px; line-height: 1.6; max-width: 360px; margin: 0 auto 20px; }
+  .strava-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--strava);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .strava-btn:hover { opacity: 0.9; }
+
+  /* Scrollbar */
+  .sidebar::-webkit-scrollbar { width: 3px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  /* Training log modal */
+  .modal-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 20px 24px;
+    width: 420px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 14px; }
+  .modal-section { font-size: 11px; color: var(--muted2); text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 6px; font-family: 'DM Mono', monospace; }
+  .modal-plan-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .modal-log-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; resize: vertical; outline: none; min-height: 80px; transition: border-color 0.15s; }
+  .modal-log-input:focus { border-color: var(--accent); }
+  .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .modal-field label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 3px; }
+  .modal-field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 13px; font-family: 'DM Mono', monospace; outline: none; transition: border-color 0.15s; }
+  .modal-field input:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+  .modal-btn-primary { flex: 1; background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .modal-btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .modal-btn-ask { background: rgba(232,255,71,0.1); color: var(--accent); border: 1px solid rgba(232,255,71,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+  /* Misc */
+  .divider { height: 1px; background: var(--border); margin: 4px 0; }
+  .green { color: var(--green); }
+  .red { color: var(--red); }
+  .amber { color: var(--amber); }
+  .accent { color: var(--accent); }
+
+  /* Profile editor */
+  .profile-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .profile-input:focus { border-color: var(--accent); }
+  .profile-input::placeholder { color: var(--muted2); }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="menuToggle" onclick="toggleSidebar()" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:16px;color:var(--text);align-items:center;justify-content:center;">☰</button>
+    <div class="logo">
+      <div class="logo-icon">S</div>
+      <div>
+        <div class="logo-text">Seitenstecher</div>
+        <div class="logo-sub">AI Training Coach</div>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badge disconnected" id="stravaBadge">
+      <div class="dot"></div>
+      Strava: nicht verbunden
+    </div>
+    <div class="badge" style="color: var(--muted);" id="dateBadge"></div>
+    <div class="badge" id="syncBadge" style="color:var(--muted);font-size:10px;">☁️ sync</div>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <!-- Today -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Heute</div>
+      <div class="today-card" id="todayCard">
+        <div class="today-day" id="todayDay">—</div>
+        <div class="today-workout" id="todayWorkout">Laden...</div>
+        <div class="today-detail" id="todayDetail"></div>
+      </div>
+    </div>
+
+    <!-- Week -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Diese Woche</div>
+      <div class="week-nav" id="weekNav"></div>
+    </div>
+
+    <!-- Races -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Race Countdown</div>
+      <div id="raceList"></div>
+    </div>
+
+    <!-- Performance -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Dein Profil</div>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="sb_ltpace">4:13</div>
+          <div class="stat-lbl">Laktatschwelle</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="sb_hrlt">174</div>
+          <div class="stat-lbl">HF Schwelle</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="sb_hrmax">199</div>
+          <div class="stat-lbl">HFmax</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val accent" id="sb_hrv">~86</div>
+          <div class="stat-lbl">HRV (ms)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Schnellzugriff</div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="quickPrompt('Was ist meine heutige Einheit und was soll ich dabei beachten?')">
+          <span class="q-icon">📋</span>
+          <span class="q-label">Heutige Einheit</span>
+          <span class="q-arrow">↗</span>
+        </button>
+        <button class="quick-btn" onclick="quickPrompt('Analysiere meine letzte Strava-Aktivität und vergleiche sie mit dem Trainingsplan.')">
+          <span class="q-icon">📊</span>
+          <span class="q-label">Letzte Aktivität</span>
+          <span class="q-arrow">↗</span>
+        </button>
+        <button class="quick-btn" onclick="quickPrompt('Wie ist mein aktueller Trainingsstand für den Ironman 70.3 Duisburg am 16.08.? Was muss ich noch beachten?')">
+          <span class="q-icon">🏁</span>
+          <span class="q-label">70.3 Race-Prep</span>
+          <span class="q-arrow">↗</span>
+        </button>
+        <button class="quick-btn" onclick="quickPrompt('Wings for Life ist in wenigen Tagen. Gib mir eine konkrete Strategie für das Rennen basierend auf meinem aktuellen Fitnessstand.')">
+          <span class="q-icon">🐰</span>
+          <span class="q-label">Wings for Life</span>
+          <span class="q-arrow">↗</span>
+        </button>
+        <button class="quick-btn" onclick="quickPrompt('Zeig mir eine Übersicht meines Trainingsvolumens dieser Woche.')">
+          <span class="q-icon">📈</span>
+          <span class="q-label">Wochenvolumen</span>
+          <span class="q-arrow">↗</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Supabase status -->
+    <div class="token-section" style="border-top: 1px solid var(--border);">
+      <div class="sidebar-label">Cloud Sync</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;color:var(--muted);">Supabase verbunden</div>
+        <div style="font-size:11px;color:var(--green);">✓ aktiv</div>
+      </div>
+      <button onclick="db.syncFromCloud().then(()=>{buildPlanPanel();buildWeekNav();renderWellness && renderWellness();})" style="margin-top:6px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;">↻ Jetzt synchronisieren</button>
+    </div>
+
+    <!-- Anthropic API Key -->
+    <div class="token-section" style="border-top: 1px solid var(--border);">
+      <div class="sidebar-label">Anthropic API Key</div>
+      <div style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 7px;">
+        Key von <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: var(--accent); text-decoration: none;">console.anthropic.com</a> — nur lokal gespeichert.
+      </div>
+      <div id="apiKeySetup">
+        <div class="token-input-wrap">
+          <input type="password" class="token-input" id="anthropicKey" placeholder="sk-ant-..." style="font-size: 13px;" />
+          <button class="token-btn" onclick="saveApiKey()">OK</button>
+        </div>
+      </div>
+      <div id="apiKeyConnected" style="display:none;">
+        <div style="font-size: 13px; color: var(--green); margin-bottom: 7px;">✓ API Key gespeichert</div>
+        <button style="font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0;" onclick="clearApiKey()">Entfernen</button>
+      </div>
+    </div>
+
+    <!-- Strava OAuth -->
+    <div class="token-section">
+      <div class="sidebar-label">Strava</div>
+      <div id="stravaDisconnected">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height:1.5;">Einmalig verbinden — Token erneuert sich automatisch.</div>
+        <button onclick="startStravaOAuth()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#fc4c02;color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">🔗 Mit Strava verbinden</button>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted2);">Oder manuell:</div>
+        <div class="token-input-wrap" style="margin-top:4px;">
+          <input type="password" class="token-input" id="stravaTokenInput" placeholder="Access Token..." style="font-size:12px;"/>
+          <button class="token-btn" onclick="connectWithToken()" style="font-size:11px;">OK</button>
+        </div>
+      </div>
+      <div id="tokenConnected" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;color:var(--green);">✓ Strava verbunden</div>
+          <button onclick="disconnectStrava()" style="font-size:10px;color:var(--muted2);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:4px;padding:2px 7px;cursor:pointer;font-family:'DM Mono',monospace;">trennen</button>
+        </div>
+      </div>
+    </div>TYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Seitenstecher Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --surface: #141418;
+    --surface2: #1c1c22;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f0;
+    --muted: #888;
+    --muted2: #555;
+    --accent: #e8ff47;
+    --accent2: #b8cc2a;
+    --strava: #fc4c02;
+    --blue: #4a9eff;
+    --green: #3ecf6e;
+    --red: #ff5555;
+    --amber: #ffb547;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    color: #000;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.3px;
+  }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+  }
+  .badge.connected { border-color: rgba(62,207,110,0.3); color: var(--green); }
+  .badge.disconnected { border-color: rgba(255,85,85,0.3); color: var(--red); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ─── LAYOUT ─── */
+  .app {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 65px);
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 768px) {
+    .app { flex-direction: column; height: calc(100vh - 57px); }
+    .sidebar {
+      width: 100% !important;
+      min-width: unset !important;
+      max-height: 0;
+      overflow: hidden;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      transition: max-height 0.3s ease;
+    }
+    .sidebar.open { max-height: 80vh; overflow-y: auto; }
+    .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .chat-panel { flex: 1; min-height: 0; }
+    .messages { flex: 1; min-height: 0; }
+    .logo-text { font-size: 14px; }
+    .logo-sub { display: none; }
+    #menuToggle { display: flex !important; }
+    .msg-bubble { max-width: 90%; font-size: 13px; }
+    .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
+    .week-nav { grid-template-columns: repeat(7, 1fr); }
+    #calendarGrid { grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .modal-box { width: 95vw; max-width: unset; padding: 16px; }
+    .input-area {
+    padding-bottom: max(16px, env(safe-area-inset-bottom)); padding: 10px 12px; }
+    .hint-chip { font-size: 10px; padding: 3px 8px; }
+    .send-btn { width: 38px; height: 38px; }
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 336px;
+    min-width: 336px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-label {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  /* Today card */
+  .today-card {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+  .today-day {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .today-workout {
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .today-detail {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* Week nav */
+  .week-nav {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .day-pill {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    gap: 2px;
+  }
+  .day-pill:hover { background: var(--surface2); }
+  .day-pill.has-workout { border-color: var(--border2); }
+  .day-pill.today { background: var(--accent); color: #000; font-weight: 600; }
+  .day-pill.today .day-dot { background: #000; }
+  .day-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .day-letter { font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  /* Race countdown */
+  .race-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .race-item:last-child { border-bottom: none; }
+  .race-name { font-size: 14px; font-weight: 500; }
+  .race-date { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .race-days {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  /* Stats */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .stat-box {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+  }
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .stat-lbl {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Quick actions */
+  .quick-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .quick-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .quick-btn:hover { background: var(--surface2); border-color: var(--border2); }
+  .quick-btn .q-icon { font-size: 17px; opacity: 0.7; }
+  .quick-btn .q-label { flex: 1; }
+  .quick-btn .q-arrow { color: var(--muted2); font-size: 12px; }
+
+  /* Strava token input */
+  .token-section {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  .token-input-wrap {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .token-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .token-input:focus { border-color: var(--accent); }
+  .token-input::placeholder { color: var(--muted2); }
+  .token-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+  .token-btn:hover { opacity: 0.85; }
+
+  /* ─── MAIN CHAT ─── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex;
+    gap: 2px;
+    padding: 12px 20px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
   .tab {
     padding: 8px 16px;
     font-size: 14px;
@@ -1339,9 +2196,24 @@ const db = {
     // Chat
     const chat = await db.getChat();
     if (chat && chat.length) localStorage.setItem('sc_chat_history', JSON.stringify(chat));
-    // Strava cache
-    const strava = await db.getStravaCache();
-    if (strava.length) localStorage.setItem('sc_strava_cache', JSON.stringify(strava));
+    // Strava cache + anthropic key
+    const stravaRows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
+    if (stravaRows[0]) {
+      if (stravaRows[0].activities && stravaRows[0].activities.length) {
+        localStorage.setItem('sc_strava_cache', JSON.stringify(stravaRows[0].activities));
+      }
+      if (stravaRows[0].access_token && !stravaToken) {
+        stravaToken = stravaRows[0].access_token;
+        localStorage.setItem('sc_access_token', stravaRows[0].access_token);
+        if (stravaRows[0].refresh_token) localStorage.setItem('sc_refresh_token', stravaRows[0].refresh_token);
+        if (stravaRows[0].expires_at) localStorage.setItem('sc_token_expiry', stravaRows[0].expires_at);
+      }
+      if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) {
+        localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key);
+        document.getElementById('apiKeySetup').style.display = 'none';
+        document.getElementById('apiKeyConnected').style.display = 'block';
+      }
+    }
     console.log('Sync complete');
     if (badge) { badge.textContent = '☁️ synced'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge) { badge.textContent = '☁️'; badge.style.color = 'var(--muted)'; }}, 3000); }
   }
@@ -1833,10 +2705,15 @@ function init() {
   } else {
     addWelcomeMessage();
   }
+  // Check for OAuth callback first
+  if (window.location.search.includes('code=')) {
+    handleOAuthCallback();
+  }
   if (stravaToken) {
+    document.getElementById('stravaDisconnected').style.display = 'none';
     document.getElementById('tokenConnected').style.display = 'block';
     updateStravaBadge(true);
-    loadStravaActivities();
+    maybeRefreshStravaToken().then(() => loadStravaActivities());
   }
   if (localStorage.getItem('sc_anthropic_key')) {
     document.getElementById('apiKeySetup').style.display = 'none';
@@ -2643,6 +3520,8 @@ function saveApiKey() {
   const key = document.getElementById('anthropicKey').value.trim();
   if (!key) return;
   localStorage.setItem('sc_anthropic_key', key);
+  // Also save to Supabase so it syncs across devices
+  sbUpsert('sc_strava', { anthropic_key: key });
   document.getElementById('anthropicKey').value = '';
   document.getElementById('apiKeySetup').style.display = 'none';
   document.getElementById('apiKeyConnected').style.display = 'block';
@@ -2655,6 +3534,86 @@ function clearApiKey() {
 }
 
 // ─── STRAVA ───
+// OAuth flow using GitHub Pages callback
+const STRAVA_CLIENT_ID = '236410';
+const STRAVA_REDIRECT = window.location.origin + window.location.pathname;
+
+function startStravaOAuth() {
+  const state = Math.random().toString(36).slice(2);
+  localStorage.setItem('sc_oauth_state', state);
+  const url = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${encodeURIComponent(STRAVA_REDIRECT)}&response_type=code&scope=activity:read_all&state=${state}`;
+  window.location.href = url;
+}
+
+async function handleOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const savedState = localStorage.getItem('sc_oauth_state');
+  if (!code) return;
+  // Clean URL
+  window.history.replaceState({}, document.title, window.location.pathname);
+  localStorage.removeItem('sc_oauth_state');
+
+  // Exchange code via Supabase Edge Function
+  try {
+    const res = await fetch(`${SB_URL}/functions/v1/strava-oauth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ code, redirect_uri: STRAVA_REDIRECT })
+    });
+    const data = await res.json();
+    if (data.access_token) {
+      stravaToken = data.access_token;
+      localStorage.setItem('sc_access_token', data.access_token);
+      localStorage.setItem('sc_refresh_token', data.refresh_token);
+      localStorage.setItem('sc_token_expiry', data.expires_at);
+      // Save to Supabase for cross-device sync
+      await sbUpsert('sc_strava', {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at
+      });
+      showStravaConnected();
+      appendMsg('coach', '✅ Strava verbunden! Lade Aktivitäten...');
+      await loadStravaActivities();
+      appendMsg('coach', `${stravaActivities.length} Aktivitäten geladen.`);
+    } else {
+      appendMsg('coach', '⚠️ Strava-Verbindung fehlgeschlagen: ' + JSON.stringify(data));
+    }
+  } catch(e) {
+    // Fallback: if Edge Function not set up yet, show instructions
+    appendMsg('coach', '⚠️ Edge Function nicht eingerichtet. Bitte manuellen Token verwenden oder Edge Function deployen.');
+  }
+}
+
+async function maybeRefreshStravaToken() {
+  const expiry = parseInt(localStorage.getItem('sc_token_expiry') || '0');
+  const refreshToken = localStorage.getItem('sc_refresh_token');
+  if (!refreshToken || Date.now()/1000 < expiry - 3600) return;
+  try {
+    const res = await fetch(`${SB_URL}/functions/v1/strava-oauth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    const data = await res.json();
+    if (data.access_token) {
+      stravaToken = data.access_token;
+      localStorage.setItem('sc_access_token', data.access_token);
+      localStorage.setItem('sc_refresh_token', data.refresh_token);
+      localStorage.setItem('sc_token_expiry', data.expires_at);
+      await sbUpsert('sc_strava', { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: data.expires_at });
+    }
+  } catch(e) { console.log('Token refresh failed:', e); }
+}
+
+function showStravaConnected() {
+  document.getElementById('stravaDisconnected').style.display = 'none';
+  document.getElementById('tokenConnected').style.display = 'block';
+  updateStravaBadge(true);
+}
+
 function connectWithToken() {
   const input = document.getElementById('stravaTokenInput');
   const token = input.value.trim();
