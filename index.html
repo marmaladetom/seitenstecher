@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Seitenstecher Coach</title>
-<!-- PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Seitenstecher">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0c0c0f">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPgogIDx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiCiAgICAgICAgZmlsbD0iIzBjMGMwZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9ImF1dG8iPlM8L3RleHQ+Cjwvc3ZnPg==">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPgogIDx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiCiAgICAgICAgZmlsbD0iIzBjMGMwZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9ImF1dG8iPlM8L3RleHQ+Cjwvc3ZnPg==">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPjx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMwYzBjMGYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJhdXRvIj5TPC90ZXh0Pjwvc3ZnPg==">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPjx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMwYzBjMGYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJhdXRvIj5TPC90ZXh0Pjwvc3ZnPg==">
+<title>Seitenstecher Coach</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -104,40 +103,26 @@
   .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   /* ─── LAYOUT ─── */
+  html, body { height: 100%; overflow: hidden; }
   .app {
     display: flex;
     flex: 1;
     overflow: hidden;
     height: calc(100vh - 65px);
   }
-
-  /* ─── MOBILE ─── */
   @media (max-width: 768px) {
     .app { flex-direction: column; height: calc(100vh - 57px); }
-    .sidebar {
-      width: 100% !important;
-      min-width: unset !important;
-      max-height: 0;
-      overflow: hidden;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      transition: max-height 0.3s ease;
-    }
+    .sidebar { width: 100% !important; min-width: unset !important; max-height: 0; overflow: hidden; border-right: none; border-bottom: 1px solid var(--border); transition: max-height 0.3s ease; }
     .sidebar.open { max-height: 80vh; overflow-y: auto; }
     .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .chat-panel { flex: 1; min-height: 0; }
     .messages { flex: 1; min-height: 0; }
-    .logo-text { font-size: 14px; }
     .logo-sub { display: none; }
     #menuToggle { display: flex !important; }
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
-    .week-nav { grid-template-columns: repeat(7, 1fr); }
-    #calendarGrid { grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
-    .stat-grid { grid-template-columns: 1fr 1fr; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area {
-    padding-bottom: max(16px, env(safe-area-inset-bottom)); padding: 10px 12px; }
+    .input-area { padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
   }
@@ -495,6 +480,7 @@
   /* Input area */
   .input-area {
     padding: 16px 20px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     background: var(--surface);
   }
@@ -717,7 +703,7 @@
       Strava: nicht verbunden
     </div>
     <div class="badge" style="color: var(--muted);" id="dateBadge"></div>
-    <div class="badge" id="syncBadge" style="color:var(--muted);font-size:10px;">☁️ sync</div>
+    <div class="badge" id="syncBadge" style="color:var(--muted);font-size:10px;">☁️</div>
   </div>
 </header>
 
@@ -801,14 +787,14 @@
       </div>
     </div>
 
-    <!-- Supabase status -->
-    <div class="token-section" style="border-top: 1px solid var(--border);">
+    <!-- Cloud Sync -->
+    <div class="token-section" style="border-top:1px solid var(--border);">
       <div class="sidebar-label">Cloud Sync</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <div style="font-size:12px;color:var(--muted);">Supabase verbunden</div>
         <div style="font-size:11px;color:var(--green);">✓ aktiv</div>
       </div>
-      <button onclick="db.syncFromCloud().then(()=>{buildPlanPanel();buildWeekNav();renderWellness && renderWellness();})" style="margin-top:6px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;">↻ Jetzt synchronisieren</button>
+      <button onclick="db.syncFromCloud().then(()=>{buildPlanPanel();buildWeekNav();if(typeof renderWellness==='function')renderWellness();})" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;">↻ Jetzt synchronisieren</button>
     </div>
 
     <!-- Anthropic API Key -->
@@ -833,7 +819,7 @@
     <div class="token-section">
       <div class="sidebar-label">Strava</div>
       <div id="stravaDisconnected">
-        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height:1.5;">Einmalig verbinden — Token erneuert sich automatisch.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Einmalig verbinden — Token erneuert sich automatisch.</div>
         <button onclick="startStravaOAuth()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#fc4c02;color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">🔗 Mit Strava verbinden</button>
         <div style="margin-top:8px;font-size:11px;color:var(--muted2);">Oder manuell:</div>
         <div class="token-input-wrap" style="margin-top:4px;">
@@ -852,6 +838,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Seitenstecher">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0c0c0f">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPjx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMwYzBjMGYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJhdXRvIj5TPC90ZXh0Pjwvc3ZnPg==">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMCIgZmlsbD0iI2U4ZmY0NyIvPjx0ZXh0IHg9IjI1NiIgeT0iMzcwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNDAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMwYzBjMGYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJhdXRvIj5TPC90ZXh0Pjwvc3ZnPg==">
 <title>Seitenstecher Coach</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
@@ -945,40 +938,26 @@
   .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   /* ─── LAYOUT ─── */
+  html, body { height: 100%; overflow: hidden; }
   .app {
     display: flex;
     flex: 1;
     overflow: hidden;
     height: calc(100vh - 65px);
   }
-
-  /* ─── MOBILE ─── */
   @media (max-width: 768px) {
     .app { flex-direction: column; height: calc(100vh - 57px); }
-    .sidebar {
-      width: 100% !important;
-      min-width: unset !important;
-      max-height: 0;
-      overflow: hidden;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      transition: max-height 0.3s ease;
-    }
+    .sidebar { width: 100% !important; min-width: unset !important; max-height: 0; overflow: hidden; border-right: none; border-bottom: 1px solid var(--border); transition: max-height 0.3s ease; }
     .sidebar.open { max-height: 80vh; overflow-y: auto; }
     .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .chat-panel { flex: 1; min-height: 0; }
     .messages { flex: 1; min-height: 0; }
-    .logo-text { font-size: 14px; }
     .logo-sub { display: none; }
     #menuToggle { display: flex !important; }
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
-    .week-nav { grid-template-columns: repeat(7, 1fr); }
-    #calendarGrid { grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
-    .stat-grid { grid-template-columns: 1fr 1fr; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area {
-    padding-bottom: max(16px, env(safe-area-inset-bottom)); padding: 10px 12px; }
+    .input-area { padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
   }
@@ -1336,6 +1315,7 @@
   /* Input area */
   .input-area {
     padding: 16px 20px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     background: var(--surface);
   }
@@ -1558,7 +1538,7 @@
       Strava: nicht verbunden
     </div>
     <div class="badge" style="color: var(--muted);" id="dateBadge"></div>
-    <div class="badge" id="syncBadge" style="color:var(--muted);font-size:10px;">☁️ sync</div>
+    <div class="badge" id="syncBadge" style="color:var(--muted);font-size:10px;">☁️</div>
   </div>
 </header>
 
@@ -1640,16 +1620,6 @@
           <span class="q-arrow">↗</span>
         </button>
       </div>
-    </div>
-
-    <!-- Supabase status -->
-    <div class="token-section" style="border-top: 1px solid var(--border);">
-      <div class="sidebar-label">Cloud Sync</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:12px;color:var(--muted);">Supabase verbunden</div>
-        <div style="font-size:11px;color:var(--green);">✓ aktiv</div>
-      </div>
-      <button onclick="db.syncFromCloud().then(()=>{buildPlanPanel();buildWeekNav();renderWellness && renderWellness();})" style="margin-top:6px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;">↻ Jetzt synchronisieren</button>
     </div>
 
     <!-- Anthropic API Key -->
@@ -2044,10 +2014,7 @@ async function sbUpsert(table, row) {
   try {
     await fetch(`${SB_URL}/rest/v1/${table}`, {
       method: 'POST',
-      headers: {
-        'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify({ ...row, user_id: SB_USER, updated_at: new Date().toISOString() })
     });
   } catch(e) { console.log('sbUpsert error:', e); }
@@ -2063,159 +2030,45 @@ async function sbDelete(table, match) {
   } catch(e) { console.log('sbDelete error:', e); }
 }
 
-// ── Sync helpers for each data type ──
 const db = {
-  // Done
-  async getDone(kw, day) {
-    const rows = await sbGet('sc_done', { kw: `eq.${kw}`, day: `eq.${day}`, user_id: `eq.${SB_USER}` });
-    return rows[0] ? (rows[0].done ? '1' : '0') : null;
-  },
-  async setDone(kw, day, val) {
-    localStorage.setItem('sc_done_kw'+kw+'_'+day, val);
-    await sbUpsert('sc_done', { kw, day, done: val === '1' });
-  },
-
-  // Plan edits
-  async getEdit(kw, day) {
-    const cached = localStorage.getItem('sc_edit_kw'+kw+'_'+day);
-    if (cached) return cached;
-    const rows = await sbGet('sc_plan_edits', { kw: `eq.${kw}`, day: `eq.${day}`, user_id: `eq.${SB_USER}` });
-    if (rows[0]) { localStorage.setItem('sc_edit_kw'+kw+'_'+day, JSON.stringify(rows[0].entry)); return JSON.stringify(rows[0].entry); }
-    return null;
-  },
-  async setEdit(kw, day, entry) {
-    localStorage.setItem('sc_edit_kw'+kw+'_'+day, JSON.stringify(entry));
-    await sbUpsert('sc_plan_edits', { kw, day, entry });
-  },
-  async removeEdit(kw, day) {
-    localStorage.removeItem('sc_edit_kw'+kw+'_'+day);
-    await sbDelete('sc_plan_edits', { kw: `eq.${kw}`, day: `eq.${day}` });
-  },
-
-  // Extras
-  async getExtras(kw, day) {
-    const cached = localStorage.getItem('sc_extra_kw'+kw+'_'+day);
-    if (cached) return JSON.parse(cached);
-    const rows = await sbGet('sc_extras', { kw: `eq.${kw}`, day: `eq.${day}`, user_id: `eq.${SB_USER}` });
-    if (rows[0]) { localStorage.setItem('sc_extra_kw'+kw+'_'+day, JSON.stringify(rows[0].activities)); return rows[0].activities; }
-    return [];
-  },
-  async setExtras(kw, day, activities) {
-    localStorage.setItem('sc_extra_kw'+kw+'_'+day, JSON.stringify(activities));
-    await sbUpsert('sc_extras', { kw, day, activities });
-  },
-
-  // Logs
-  async getLog(kw, day) {
-    const cached = localStorage.getItem('sc_log_kw'+kw+'_'+day);
-    if (cached) return JSON.parse(cached);
-    const rows = await sbGet('sc_logs', { kw: `eq.${kw}`, day: `eq.${day}`, user_id: `eq.${SB_USER}` });
-    if (rows[0]) {
-      const log = { dist: rows[0].dist, time: rows[0].time_min, hr: rows[0].hr, pace: rows[0].pace, note: rows[0].note };
-      localStorage.setItem('sc_log_kw'+kw+'_'+day, JSON.stringify(log));
-      return log;
-    }
-    return null;
-  },
-  async setLog(kw, day, log) {
-    localStorage.setItem('sc_log_kw'+kw+'_'+day, JSON.stringify(log));
-    await sbUpsert('sc_logs', { kw, day, dist: log.dist||null, time_min: log.time||null, hr: log.hr||null, pace: log.pace||null, note: log.note||null });
-  },
-
-  // Wellness
-  async getWellness(dateStr) {
-    const cached = localStorage.getItem('sc_wellness_'+dateStr);
-    if (cached) return JSON.parse(cached);
-    const rows = await sbGet('sc_wellness', { date: `eq.${dateStr}`, user_id: `eq.${SB_USER}` });
-    if (rows[0]) {
-      const w = { hrv: rows[0].hrv, sleep: rows[0].sleep_score, sleepH: rows[0].sleep_hours, date: dateStr };
-      localStorage.setItem('sc_wellness_'+dateStr, JSON.stringify(w));
-      return w;
-    }
-    return null;
-  },
-  async setWellness(dateStr, w) {
-    localStorage.setItem('sc_wellness_'+dateStr, JSON.stringify(w));
-    await sbUpsert('sc_wellness', { date: dateStr, hrv: w.hrv||null, sleep_score: w.sleep||null, sleep_hours: w.sleepH||null });
-  },
-  async deleteWellness(dateStr) {
-    localStorage.removeItem('sc_wellness_'+dateStr);
-    await sbDelete('sc_wellness', { date: `eq.${dateStr}` });
-  },
-  async getAllWellness() {
-    const rows = await sbGet('sc_wellness', { user_id: `eq.${SB_USER}`, order: 'date.desc', limit: '60' });
-    rows.forEach(r => {
-      const w = { hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date };
-      localStorage.setItem('sc_wellness_'+r.date, JSON.stringify(w));
-    });
-    return rows.map(r => ({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date }));
-  },
-
-  // Chat history
-  async getChat() {
-    const rows = await sbGet('sc_chat', { user_id: `eq.${SB_USER}` });
-    return rows[0] ? rows[0].messages : null;
-  },
-  async setChat(messages) {
-    localStorage.setItem('sc_chat_history', JSON.stringify(messages));
-    await sbUpsert('sc_chat', { messages });
-  },
-
-  // Strava cache
-  async getStravaCache() {
-    const rows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
-    return rows[0] ? rows[0].activities || [] : [];
-  },
-  async setStravaCache(activities) {
-    localStorage.setItem('sc_strava_cache', JSON.stringify(activities));
-    await sbUpsert('sc_strava', { activities });
-  },
-
-  // Full sync from Supabase on load
+  async setDone(kw, day, val) { localStorage.setItem('sc_done_kw'+kw+'_'+day, val); await sbUpsert('sc_done', { kw, day, done: val === '1' }); },
+  async setEdit(kw, day, entry) { localStorage.setItem('sc_edit_kw'+kw+'_'+day, JSON.stringify(entry)); await sbUpsert('sc_plan_edits', { kw, day, entry }); },
+  async removeEdit(kw, day) { localStorage.removeItem('sc_edit_kw'+kw+'_'+day); await sbDelete('sc_plan_edits', { kw: `eq.${kw}`, day: `eq.${day}` }); },
+  async setExtras(kw, day, activities) { localStorage.setItem('sc_extra_kw'+kw+'_'+day, JSON.stringify(activities)); await sbUpsert('sc_extras', { kw, day, activities }); },
+  async setLog(kw, day, log) { localStorage.setItem('sc_log_kw'+kw+'_'+day, JSON.stringify(log)); await sbUpsert('sc_logs', { kw, day, dist: log.dist||null, time_min: log.time||null, hr: log.hr||null, pace: log.pace||null, note: log.note||null }); },
+  async setWellness(dateStr, w) { localStorage.setItem('sc_wellness_'+dateStr, JSON.stringify(w)); await sbUpsert('sc_wellness', { date: dateStr, hrv: w.hrv||null, sleep_score: w.sleep||null, sleep_hours: w.sleepH||null }); },
+  async deleteWellness(dateStr) { localStorage.removeItem('sc_wellness_'+dateStr); await sbDelete('sc_wellness', { date: `eq.${dateStr}` }); },
+  async setChat(messages) { localStorage.setItem('sc_chat_history', JSON.stringify(messages)); await sbUpsert('sc_chat', { messages }); },
+  async setStravaCache(activities) { localStorage.setItem('sc_strava_cache', JSON.stringify(activities)); await sbUpsert('sc_strava', { activities }); },
   async syncFromCloud() {
     const badge = document.getElementById('syncBadge');
-    if (badge) { badge.textContent = '☁️ syncing...'; badge.style.color = 'var(--amber)'; }
-    console.log('Syncing from Supabase...');
-    // Edits
-    const edits = await sbGet('sc_plan_edits', { user_id: `eq.${SB_USER}` });
-    edits.forEach(r => localStorage.setItem('sc_edit_kw'+r.kw+'_'+r.day, JSON.stringify(r.entry)));
-    // Done
-    const done = await sbGet('sc_done', { user_id: `eq.${SB_USER}` });
-    done.forEach(r => localStorage.setItem('sc_done_kw'+r.kw+'_'+r.day, r.done ? '1' : '0'));
-    // Extras
-    const extras = await sbGet('sc_extras', { user_id: `eq.${SB_USER}` });
-    extras.forEach(r => localStorage.setItem('sc_extra_kw'+r.kw+'_'+r.day, JSON.stringify(r.activities)));
-    // Logs
-    const logs = await sbGet('sc_logs', { user_id: `eq.${SB_USER}` });
-    logs.forEach(r => {
-      const log = { dist: r.dist, time: r.time_min, hr: r.hr, pace: r.pace, note: r.note };
-      localStorage.setItem('sc_log_kw'+r.kw+'_'+r.day, JSON.stringify(log));
-    });
-    // Wellness
-    await db.getAllWellness();
-    // Chat
-    const chat = await db.getChat();
-    if (chat && chat.length) localStorage.setItem('sc_chat_history', JSON.stringify(chat));
-    // Strava cache + anthropic key
-    const stravaRows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
-    if (stravaRows[0]) {
-      if (stravaRows[0].activities && stravaRows[0].activities.length) {
-        localStorage.setItem('sc_strava_cache', JSON.stringify(stravaRows[0].activities));
+    if (badge) { badge.textContent = '☁️ sync...'; badge.style.color = 'var(--amber)'; }
+    try {
+      const [edits, done, extras, logs, wellness, chat, stravaRows] = await Promise.all([
+        sbGet('sc_plan_edits', { user_id: `eq.${SB_USER}` }),
+        sbGet('sc_done', { user_id: `eq.${SB_USER}` }),
+        sbGet('sc_extras', { user_id: `eq.${SB_USER}` }),
+        sbGet('sc_logs', { user_id: `eq.${SB_USER}` }),
+        sbGet('sc_wellness', { user_id: `eq.${SB_USER}`, order: 'date.desc', limit: '60' }),
+        sbGet('sc_chat', { user_id: `eq.${SB_USER}` }),
+        sbGet('sc_strava', { user_id: `eq.${SB_USER}` })
+      ]);
+      edits.forEach(r => localStorage.setItem('sc_edit_kw'+r.kw+'_'+r.day, JSON.stringify(r.entry)));
+      done.forEach(r => localStorage.setItem('sc_done_kw'+r.kw+'_'+r.day, r.done ? '1' : '0'));
+      extras.forEach(r => localStorage.setItem('sc_extra_kw'+r.kw+'_'+r.day, JSON.stringify(r.activities)));
+      logs.forEach(r => localStorage.setItem('sc_log_kw'+r.kw+'_'+r.day, JSON.stringify({ dist: r.dist, time: r.time_min, hr: r.hr, pace: r.pace, note: r.note })));
+      wellness.forEach(r => localStorage.setItem('sc_wellness_'+r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date })));
+      if (chat[0] && chat[0].messages && chat[0].messages.length) localStorage.setItem('sc_chat_history', JSON.stringify(chat[0].messages));
+      if (stravaRows[0]) {
+        if (stravaRows[0].activities && stravaRows[0].activities.length) { stravaActivities = stravaRows[0].activities; localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities)); }
+        if (stravaRows[0].access_token && !stravaToken) { stravaToken = stravaRows[0].access_token; localStorage.setItem('sc_access_token', stravaRows[0].access_token); if (stravaRows[0].refresh_token) localStorage.setItem('sc_refresh_token', stravaRows[0].refresh_token); if (stravaRows[0].expires_at) localStorage.setItem('sc_token_expiry', stravaRows[0].expires_at); }
+        if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
       }
-      if (stravaRows[0].access_token && !stravaToken) {
-        stravaToken = stravaRows[0].access_token;
-        localStorage.setItem('sc_access_token', stravaRows[0].access_token);
-        if (stravaRows[0].refresh_token) localStorage.setItem('sc_refresh_token', stravaRows[0].refresh_token);
-        if (stravaRows[0].expires_at) localStorage.setItem('sc_token_expiry', stravaRows[0].expires_at);
-      }
-      if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) {
-        localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key);
-        document.getElementById('apiKeySetup').style.display = 'none';
-        document.getElementById('apiKeyConnected').style.display = 'block';
-      }
+      if (badge) { badge.textContent = '☁️ ✓'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge){badge.textContent='☁️';badge.style.color='var(--muted)';} }, 3000); }
+    } catch(e) {
+      console.log('Sync error:', e);
+      if (badge) { badge.textContent = '☁️ !'; badge.style.color = 'var(--red)'; }
     }
-    console.log('Sync complete');
-    if (badge) { badge.textContent = '☁️ synced'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge) { badge.textContent = '☁️'; badge.style.color = 'var(--muted)'; }}, 3000); }
   }
 };
 
@@ -2681,20 +2534,12 @@ function getSavedClientSecret() { return localStorage.getItem('sc_client_secret'
 
 // ─── INIT ───
 function init() {
+  if (window.location.search.includes('code=')) { handleOAuthCallback(); return; }
   updateDateBadge();
   updateTodayCard();
   buildWeekNav();
   buildRaceCountdown();
   buildPlanPanel();
-  // Sync from Supabase in background — refresh UI when done
-  db.syncFromCloud().then(() => {
-    buildWeekNav();
-    buildRaceCountdown();
-    buildPlanPanel();
-    updateTodayCard();
-    if (currentTab === 'wellness') renderWellness();
-    console.log('UI refreshed from cloud');
-  });
   // Restore chat history to UI
   const _savedMsgs = conversationHistory;
   if (_savedMsgs.length > 0) {
@@ -2705,15 +2550,12 @@ function init() {
   } else {
     addWelcomeMessage();
   }
-  // Check for OAuth callback first
-  if (window.location.search.includes('code=')) {
-    handleOAuthCallback();
-  }
   if (stravaToken) {
-    document.getElementById('stravaDisconnected').style.display = 'none';
+    const sd = document.getElementById('stravaDisconnected');
+    if (sd) sd.style.display = 'none';
     document.getElementById('tokenConnected').style.display = 'block';
     updateStravaBadge(true);
-    maybeRefreshStravaToken().then(() => loadStravaActivities());
+    loadStravaActivities();
   }
   if (localStorage.getItem('sc_anthropic_key')) {
     document.getElementById('apiKeySetup').style.display = 'none';
@@ -2857,9 +2699,7 @@ function toggleDone(kw, day) {
   const current = localStorage.getItem(key);
   // Determine current effective state
   const currentlyDone = current === '1' || (current === null && entry && entry.done === true);
-  const newVal = currentlyDone ? '0' : '1';
-  localStorage.setItem(key, newVal);
-  db.setDone(week.kw, day, newVal);
+  localStorage.setItem(key, currentlyDone ? '0' : '1');
   renderCalendar();
 }
 function getStravaMatchForDay(dateStr) {
@@ -3019,7 +2859,6 @@ function saveLog() {
   };
   localStorage.setItem(logKey, JSON.stringify(data));
   db.setLog(modalKw, modalDay, data);
-  // Auto-check as done
   localStorage.setItem(getDoneKey(modalKw, modalDay), '1');
   db.setDone(modalKw, modalDay, '1');
   closeTrainModal();
@@ -3271,10 +3110,7 @@ async function sendMessage() {
       conversationHistory.push({ role: 'assistant', content: reply });
       // Keep last 20 messages, save to localStorage
       if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
-      try {
-        localStorage.setItem('sc_chat_history', JSON.stringify(conversationHistory));
-        db.setChat(conversationHistory);
-      } catch {}
+      try { localStorage.setItem('sc_chat_history', JSON.stringify(conversationHistory)); db.setChat(conversationHistory); } catch {}
       appendMsg('coach', formatReply(displayReply));
     } else if (data.error) {
       const errType = data.error.type || '';
@@ -3500,12 +3336,6 @@ ${merged.goals}
   appendMsg('coach', formatReply(planText));
 }
 
-// ─── MOBILE ───
-function toggleSidebar() {
-  const sb = document.querySelector('.sidebar');
-  sb.classList.toggle('open');
-}
-
 // ─── CHAT MEMORY ───
 function clearChat() {
   if (!confirm('Chat-Verlauf löschen?')) return;
@@ -3520,8 +3350,6 @@ function saveApiKey() {
   const key = document.getElementById('anthropicKey').value.trim();
   if (!key) return;
   localStorage.setItem('sc_anthropic_key', key);
-  // Also save to Supabase so it syncs across devices
-  sbUpsert('sc_strava', { anthropic_key: key });
   document.getElementById('anthropicKey').value = '';
   document.getElementById('apiKeySetup').style.display = 'none';
   document.getElementById('apiKeyConnected').style.display = 'block';
@@ -3533,30 +3361,30 @@ function clearApiKey() {
   document.getElementById('apiKeySetup').style.display = 'block';
 }
 
-// ─── STRAVA ───
-// OAuth flow using GitHub Pages callback
+
+// ─── MOBILE ───
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+
+// ─── STRAVA OAUTH ───
 const STRAVA_CLIENT_ID = '236410';
 const STRAVA_REDIRECT = window.location.origin + window.location.pathname;
 
 function startStravaOAuth() {
   const state = Math.random().toString(36).slice(2);
   localStorage.setItem('sc_oauth_state', state);
-  const url = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${encodeURIComponent(STRAVA_REDIRECT)}&response_type=code&scope=activity:read_all&state=${state}`;
-  window.location.href = url;
+  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${encodeURIComponent(STRAVA_REDIRECT)}&response_type=code&scope=activity:read_all&state=${state}`;
 }
 
 async function handleOAuthCallback() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
-  const state = params.get('state');
-  const savedState = localStorage.getItem('sc_oauth_state');
-  if (!code) return;
-  // Clean URL
+  if (!code) { init_real(); return; }
   window.history.replaceState({}, document.title, window.location.pathname);
   localStorage.removeItem('sc_oauth_state');
-
-  // Exchange code via Supabase Edge Function
   try {
+    // Try Edge Function first
     const res = await fetch(`${SB_URL}/functions/v1/strava-oauth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
@@ -3566,54 +3394,32 @@ async function handleOAuthCallback() {
     if (data.access_token) {
       stravaToken = data.access_token;
       localStorage.setItem('sc_access_token', data.access_token);
-      localStorage.setItem('sc_refresh_token', data.refresh_token);
-      localStorage.setItem('sc_token_expiry', data.expires_at);
-      // Save to Supabase for cross-device sync
-      await sbUpsert('sc_strava', {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        expires_at: data.expires_at
-      });
-      showStravaConnected();
-      appendMsg('coach', '✅ Strava verbunden! Lade Aktivitäten...');
-      await loadStravaActivities();
-      appendMsg('coach', `${stravaActivities.length} Aktivitäten geladen.`);
-    } else {
-      appendMsg('coach', '⚠️ Strava-Verbindung fehlgeschlagen: ' + JSON.stringify(data));
-    }
-  } catch(e) {
-    // Fallback: if Edge Function not set up yet, show instructions
-    appendMsg('coach', '⚠️ Edge Function nicht eingerichtet. Bitte manuellen Token verwenden oder Edge Function deployen.');
-  }
-}
-
-async function maybeRefreshStravaToken() {
-  const expiry = parseInt(localStorage.getItem('sc_token_expiry') || '0');
-  const refreshToken = localStorage.getItem('sc_refresh_token');
-  if (!refreshToken || Date.now()/1000 < expiry - 3600) return;
-  try {
-    const res = await fetch(`${SB_URL}/functions/v1/strava-oauth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ refresh_token: refreshToken })
-    });
-    const data = await res.json();
-    if (data.access_token) {
-      stravaToken = data.access_token;
-      localStorage.setItem('sc_access_token', data.access_token);
-      localStorage.setItem('sc_refresh_token', data.refresh_token);
-      localStorage.setItem('sc_token_expiry', data.expires_at);
+      localStorage.setItem('sc_refresh_token', data.refresh_token || '');
+      localStorage.setItem('sc_token_expiry', data.expires_at || '');
       await sbUpsert('sc_strava', { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: data.expires_at });
     }
-  } catch(e) { console.log('Token refresh failed:', e); }
+  } catch(e) {
+    console.log('OAuth exchange failed, need Python script:', e);
+  }
+  init_real();
 }
 
-function showStravaConnected() {
-  document.getElementById('stravaDisconnected').style.display = 'none';
-  document.getElementById('tokenConnected').style.display = 'block';
-  updateStravaBadge(true);
+function init_real() {
+  // renamed actual init body
+  updateDateBadge();
+  updateTodayCard();
+  buildWeekNav();
+  buildRaceCountdown();
+  buildPlanPanel();
+  db.syncFromCloud().then(() => {
+    buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
+    if (stravaToken) { const sd=document.getElementById('stravaDisconnected'); if(sd)sd.style.display='none'; document.getElementById('tokenConnected').style.display='block'; updateStravaBadge(true); }
+    if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
+    renderCalendar();
+  });
 }
 
+// ─── STRAVA ───
 function connectWithToken() {
   const input = document.getElementById('stravaTokenInput');
   const token = input.value.trim();
@@ -4039,7 +3845,6 @@ function removeExtra(kw, dk, idx) {
   const existing = JSON.parse(localStorage.getItem(key) || '[]');
   existing.splice(idx, 1);
   localStorage.setItem(key, JSON.stringify(existing));
-  db.setExtras(kw, dk, existing);
   renderCalendar();
 }
 
