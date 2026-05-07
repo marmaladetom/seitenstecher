@@ -972,7 +972,7 @@
     </div>
 
     <!-- Progress Panel -->
-    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;">
+    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;overflow:hidden;">
 
       <!-- Time range selector -->
       <div style="display:flex;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);">
@@ -984,7 +984,7 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      <div style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
+      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;">
 
         <!-- CTL/ATL/TSB Chart -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
@@ -2899,9 +2899,9 @@ async function loadStravaActivities() {
 
   try {
     // Load up to 100 recent activities
-    // Load up to 250 activities (3 pages of 100)
+    // Load up to 500 activities (5 pages of 100)
     let fresh = [];
-    for (let page = 1; page <= 3; page++) {
+    for (let page = 1; page <= 5; page++) {
       const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`, {
         headers: { 'Authorization': `Bearer ${stravaToken}` }
       });
@@ -3615,12 +3615,34 @@ function renderProgress() {
 
   const baseOpts = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(20,20,24,0.95)',
+        titleColor: '#888',
+        bodyColor: '#f0f0f0',
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+        padding: 8,
+        titleFont: { family: 'DM Mono, monospace', size: 11 },
+        bodyFont: { family: 'DM Mono, monospace', size: 12 },
+        callbacks: {
+          title: (items) => items[0]?.label || '',
+          label: (item) => {
+            const labels = ['Fitness (CTL)', 'Fatigue (ATL)', 'Form (TSB)'];
+            const name = labels[item.datasetIndex] || item.dataset.label || '';
+            return ' ' + name + ': ' + (item.raw > 0 && item.datasetIndex === 2 ? '+' : '') + item.raw;
+          }
+        }
+      }
+    },
     scales: {
       x: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
       y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
     },
-    elements: { point: { radius: 0 }, line: { tension: 0.4 } }
+    elements: { point: { radius: 0, hoverRadius: 5 }, line: { tension: 0.4 } }
   };
 
   // CTL/ATL/TSB — show last 90 days, label every 2 weeks
@@ -3654,7 +3676,17 @@ function renderProgress() {
         { label: 'Swim', data: volData.map(d=>d.swim), backgroundColor: 'rgba(62,207,110,0.7)', borderRadius: 3 },
       ]
     },
-    options: { ...baseOpts, plugins: { legend: { display: false } }, scales: { x: { stacked: true, ticks: { color:'#555', font:{size:9} }, grid:{color:'rgba(255,255,255,0.04)'} }, y: { stacked: true, ticks:{color:'#555',font:{size:9}}, grid:{color:'rgba(255,255,255,0.04)'} } } }
+    options: { ...baseOpts,
+      plugins: { ...baseOpts.plugins, tooltip: { ...baseOpts.plugins.tooltip,
+        callbacks: {
+          title: (items) => 'KW ' + (items[0]?.label || ''),
+          label: (item) => {
+            const names = ['🏃 Laufen', '🚴 Rad', '🏊 Swim'];
+            return ' ' + (names[item.datasetIndex]||'') + ': ' + item.raw + ' km';
+          }
+        }
+      }},
+      scales: { x: { stacked: true, ticks: { color:'#555', font:{size:9} }, grid:{color:'rgba(255,255,255,0.04)'} }, y: { stacked: true, ticks:{color:'#555',font:{size:9}}, grid:{color:'rgba(255,255,255,0.04)'} } } }
   });
 }
 
