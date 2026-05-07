@@ -570,13 +570,14 @@
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 16px;
+    padding: 12px 14px;
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 12px;
+    grid-template-columns: 36px 1fr auto;
+    gap: 10px;
     align-items: center;
     cursor: pointer;
     transition: border-color 0.15s;
+    overflow: hidden;
   }
   .activity-card:hover { border-color: var(--border2); }
   .act-type {
@@ -592,14 +593,15 @@
   .act-date { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
   .act-stats {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     text-align: right;
     flex-shrink: 0;
   }
-  .act-stat-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; white-space: nowrap; }
-  .act-stat-lbl { font-size: 11px; color: var(--muted); }
-  .act-name { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+  .act-stat-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .act-stat-lbl { font-size: 10px; color: var(--muted); }
+  .act-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .act-date { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
+  .act-info { overflow: hidden; min-width: 0; }
   .loading-acts {
     text-align: center;
     color: var(--muted);
@@ -914,8 +916,8 @@
     <div class="activities-panel" id="wellnessPanel" style="flex-direction:column;padding:0;display:none;">
 
       <!-- Input strip -->
-      <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
-        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Heute eintragen</div>
+      <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Heute eintragen</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Datum</label>
@@ -2835,7 +2837,7 @@ function renderActivities() {
     card.className = 'activity-card';
     card.innerHTML = `
       <div class="act-type ${typeClass}">${typeIcon}</div>
-      <div>
+      <div class="act-info">
         <div class="act-name">${act.name}</div>
         <div class="act-date">${date} · ${act.type}</div>
       </div>
