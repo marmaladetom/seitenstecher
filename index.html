@@ -1225,7 +1225,27 @@ const db = {
   async removeEdit(kw, day) { localStorage.removeItem('sc_edit_kw'+kw+'_'+day); await sbDelete('sc_plan_edits', { kw: `eq.${kw}`, day: `eq.${day}` }); },
   async setExtras(kw, day, activities) { localStorage.setItem('sc_extra_kw'+kw+'_'+day, JSON.stringify(activities)); await sbUpsert('sc_extras', { kw, day, activities }); },
   async setLog(kw, day, log) { localStorage.setItem('sc_log_kw'+kw+'_'+day, JSON.stringify(log)); await sbUpsert('sc_logs', { kw, day, dist: log.dist||null, time_min: log.time||null, hr: log.hr||null, pace: log.pace||null, note: log.note||null }); },
-  async setWellness(dateStr, w) { localStorage.setItem('sc_wellness_'+dateStr, JSON.stringify(w)); await sbUpsert('sc_wellness', { date: dateStr, hrv: w.hrv||null, sleep_score: w.sleep||null, sleep_hours: w.sleepH||null }); },
+  async setWellness(dateStr, w) {
+    localStorage.setItem('sc_wellness_'+dateStr, JSON.stringify(w));
+    try {
+      await fetch(`${SB_URL}/rest/v1/sc_wellness`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({
+          user_id: SB_USER,
+          date: dateStr,
+          hrv: w.hrv || null,
+          sleep_score: w.sleep || null,
+          sleep_hours: w.sleepH || null,
+          updated_at: new Date().toISOString()
+        })
+      });
+    } catch(e) { console.log('setWellness error:', e); }
+  },
   async deleteWellness(dateStr) { localStorage.removeItem('sc_wellness_'+dateStr); await sbDelete('sc_wellness', { date: `eq.${dateStr}` }); },
   async setChat(messages) { localStorage.setItem('sc_chat_history', JSON.stringify(messages)); await sbUpsert('sc_chat', { messages }); },
   async setStravaCache(activities) { localStorage.setItem('sc_strava_cache', JSON.stringify(activities)); await sbUpsert('sc_strava', { activities }); },
