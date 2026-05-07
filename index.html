@@ -811,7 +811,7 @@
     <div class="token-section" style="border-top: 1px solid var(--border);">
       <div class="sidebar-label">Anthropic API Key</div>
       <div style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 7px;">
-        Key von <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: var(--accent); text-decoration: none;">console.anthropic.com</a> — nur lokal gespeichert.
+        Key von <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: var(--accent); text-decoration: none;">console.anthropic.com</a> — wird geräteübergreifend gespeichert.
       </div>
       <div id="apiKeySetup">
         <div class="token-input-wrap">
@@ -1256,7 +1256,26 @@ const db = {
           if (stravaRows[0].refresh_token) localStorage.setItem('sc_refresh_token', stravaRows[0].refresh_token);
           if (stravaRows[0].expires_at) localStorage.setItem('sc_token_expiry', stravaRows[0].expires_at);
         }
+        if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) {
+          localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key);
+        }
         if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
+      }
+      // Update UI after sync
+      if (stravaToken) {
+        const sd = document.getElementById('stravaDisconnected');
+        if (sd) sd.style.display = 'none';
+        const tc = document.getElementById('tokenConnected');
+        if (tc) tc.style.display = 'block';
+        updateStravaBadge(true);
+        if (stravaActivities.length === 0) loadStravaActivities();
+      }
+      const savedKey = localStorage.getItem('sc_anthropic_key');
+      if (savedKey) {
+        const aks = document.getElementById('apiKeySetup');
+        const akc = document.getElementById('apiKeyConnected');
+        if (aks) aks.style.display = 'none';
+        if (akc) akc.style.display = 'block';
       }
       if (badge) { badge.textContent = '☁️ ✓'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge){badge.textContent='☁️';badge.style.color='var(--muted)';} }, 3000); }
     } catch(e) {
@@ -2546,6 +2565,7 @@ function saveApiKey() {
   const key = document.getElementById('anthropicKey').value.trim();
   if (!key) return;
   localStorage.setItem('sc_anthropic_key', key);
+  sbUpsert('sc_strava', { anthropic_key: key });
   document.getElementById('anthropicKey').value = '';
   document.getElementById('apiKeySetup').style.display = 'none';
   document.getElementById('apiKeyConnected').style.display = 'block';
