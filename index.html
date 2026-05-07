@@ -1261,24 +1261,7 @@ const db = {
         }
         if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
       }
-      // Update Strava UI
-      if (stravaToken) {
-        const sd = document.getElementById('stravaDisconnected');
-        if (sd) sd.style.display = 'none';
-        const tc = document.getElementById('tokenConnected');
-        if (tc) tc.style.display = 'block';
-        updateStravaBadge(true);
-        // Load activities AFTER token is confirmed set
-        setTimeout(() => { if (stravaActivities.length === 0) loadStravaActivities(); }, 100);
-      }
-      // Update Anthropic key UI
-      const savedKey = localStorage.getItem('sc_anthropic_key');
-      if (savedKey) {
-        const aks = document.getElementById('apiKeySetup');
-        const akc = document.getElementById('apiKeyConnected');
-        if (aks) aks.style.display = 'none';
-        if (akc) akc.style.display = 'block';
-      }
+      // UI updated by caller via updateUIFromStorage()
       if (badge) { badge.textContent = '☁️ ✓'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge){badge.textContent='☁️';badge.style.color='var(--muted)';} }, 3000); }
     } catch(e) {
       console.log('Sync error:', e);
@@ -1748,6 +1731,32 @@ function getSavedClientId() { return localStorage.getItem('sc_client_id') || '';
 function getSavedClientSecret() { return localStorage.getItem('sc_client_secret') || ''; }
 
 // ─── INIT ───
+function updateUIFromStorage() {
+  // Update Strava UI
+  if (stravaToken) {
+    const sd = document.getElementById('stravaDisconnected');
+    if (sd) sd.style.display = 'none';
+    const tc = document.getElementById('tokenConnected');
+    if (tc) tc.style.display = 'block';
+    updateStravaBadge(true);
+    if (stravaActivities.length === 0) loadStravaActivities();
+  }
+  // Update Anthropic key UI
+  if (localStorage.getItem('sc_anthropic_key')) {
+    const aks = document.getElementById('apiKeySetup');
+    const akc = document.getElementById('apiKeyConnected');
+    if (aks) aks.style.display = 'none';
+    if (akc) akc.style.display = 'block';
+  }
+  // Update profile
+  const savedProfile = localStorage.getItem('sc_profile');
+  if (savedProfile) {
+    const p = Object.assign({}, PROFILE_DEFAULTS, JSON.parse(savedProfile));
+    currentSystemPrompt = buildSystemPromptFromProfile(p);
+    updateSidebarStats(p);
+  }
+}
+
 function init() {
   if (window.location.search.includes('code=')) { handleOAuthCallback(); return; }
   updateDateBadge();
@@ -1759,29 +1768,24 @@ function init() {
   const _savedMsgs = conversationHistory;
   if (_savedMsgs.length > 0) {
     _savedMsgs.forEach(m => {
-      if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0])); // strip context blocks
+      if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0]));
       else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
     });
   } else {
     addWelcomeMessage();
   }
-  if (stravaToken) {
-    const sd = document.getElementById('stravaDisconnected');
-    if (sd) sd.style.display = 'none';
-    document.getElementById('tokenConnected').style.display = 'block';
-    updateStravaBadge(true);
-    loadStravaActivities();
-  }
-  if (localStorage.getItem('sc_anthropic_key')) {
-    document.getElementById('apiKeySetup').style.display = 'none';
-    document.getElementById('apiKeyConnected').style.display = 'block';
-  }
-  const savedProfile = localStorage.getItem('sc_profile');
-  if (savedProfile) {
-    const p = Object.assign({}, PROFILE_DEFAULTS, JSON.parse(savedProfile));
-    currentSystemPrompt = buildSystemPromptFromProfile(p);
-    updateSidebarStats(p);
-  }
+  // First update UI from localStorage (instant)
+  updateUIFromStorage();
+  // Then sync from Supabase and update again (gets cross-device data)
+  db.syncFromCloud().then(() => {
+    updateUIFromStorage();
+    buildWeekNav();
+    buildRaceCountdown();
+    buildPlanPanel();
+    updateTodayCard();
+    renderCalendar();
+    if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
+  });
 }
 
 function updateDateBadge() {
@@ -2643,21 +2647,15 @@ async function handleOAuthCallback() {
 }
 
 function init_real() {
-  // renamed actual init body
   updateDateBadge();
   updateTodayCard();
   buildWeekNav();
   buildRaceCountdown();
   buildPlanPanel();
+  updateUIFromStorage();
   db.syncFromCloud().then(() => {
+    updateUIFromStorage();
     buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
-    if (stravaToken) {
-      const sd=document.getElementById('stravaDisconnected');
-      if(sd) sd.style.display='none';
-      document.getElementById('tokenConnected').style.display='block';
-      updateStravaBadge(true);
-      if (stravaActivities.length === 0) loadStravaActivities();
-    }
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
     renderCalendar();
   });
