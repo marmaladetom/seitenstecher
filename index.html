@@ -1256,20 +1256,22 @@ const db = {
           if (stravaRows[0].refresh_token) localStorage.setItem('sc_refresh_token', stravaRows[0].refresh_token);
           if (stravaRows[0].expires_at) localStorage.setItem('sc_token_expiry', stravaRows[0].expires_at);
         }
-        if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) {
+        if (stravaRows[0].anthropic_key) {
           localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key);
         }
         if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
       }
-      // Update UI after sync
+      // Update Strava UI
       if (stravaToken) {
         const sd = document.getElementById('stravaDisconnected');
         if (sd) sd.style.display = 'none';
         const tc = document.getElementById('tokenConnected');
         if (tc) tc.style.display = 'block';
         updateStravaBadge(true);
-        if (stravaActivities.length === 0) loadStravaActivities();
+        // Load activities AFTER token is confirmed set
+        setTimeout(() => { if (stravaActivities.length === 0) loadStravaActivities(); }, 100);
       }
+      // Update Anthropic key UI
       const savedKey = localStorage.getItem('sc_anthropic_key');
       if (savedKey) {
         const aks = document.getElementById('apiKeySetup');
