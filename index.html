@@ -125,13 +125,11 @@
     #menuToggle { display: flex !important; }
     #syncBadge { display: none; }
     #dateBadge { display: none; }
-    .badge.disconnected .dot + * { display: none; }
-    .stravaBadge-text { display: none; }
-    #stravaBadge { padding: 5px 8px; font-size: 11px; }
+    #stravaBadge { font-size: 11px; padding: 4px 8px; }
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area { padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    .input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
   }
@@ -488,11 +486,17 @@
 
   /* Input area */
   .input-area {
-    padding: 12px 16px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding: 12px 16px 16px;
+    /* Automatically adds space for home indicator on all phones */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
+    /* Stick to bottom of screen on all devices */
+    position: sticky;
+    bottom: 0;
+    /* Extend background into safe area zone */
+    box-shadow: 0 calc(env(safe-area-inset-bottom, 0px) * 2) 0 0 var(--surface);
   }
   .input-row {
     display: flex;
@@ -708,9 +712,9 @@
     </div>
   </div>
   <div class="header-right">
-    <div class="badge disconnected" id="stravaBadge">
+    <div class="badge disconnected" id="stravaBadge" style="padding:5px 10px;">
       <div class="dot"></div>
-      Strava: nicht verbunden
+      Strava
     </div>
     <div class="badge" style="color: var(--muted);" id="dateBadge"></div>
     <div class="badge" id="syncBadge" style="color:var(--muted);font-size:10px;">☁️</div>
@@ -1768,7 +1772,7 @@ function updateDateBadge() {
 function updateStravaBadge(connected) {
   const b = document.getElementById('stravaBadge');
   b.className = 'badge ' + (connected ? 'connected' : 'disconnected');
-  b.innerHTML = `<div class="dot"></div> Strava: ${connected ? 'verbunden' : 'nicht verbunden'}`;
+  b.innerHTML = `<div class="dot"></div> Strava`;
 }
 
 // ─── TODAY CARD ───
