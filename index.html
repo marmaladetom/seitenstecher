@@ -1228,22 +1228,49 @@ const db = {
   async setWellness(dateStr, w) {
     localStorage.setItem('sc_wellness_'+dateStr, JSON.stringify(w));
     try {
-      await fetch(`${SB_URL}/rest/v1/sc_wellness`, {
-        method: 'POST',
-        headers: {
-          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates,return=minimal'
-        },
-        body: JSON.stringify({
-          user_id: SB_USER,
-          date: dateStr,
-          hrv: w.hrv || null,
-          sleep_score: w.sleep || null,
-          sleep_hours: w.sleepH || null,
-          updated_at: new Date().toISOString()
-        })
-      });
+      // Try UPDATE first (row exists), then INSERT if not
+      const checkRes = await fetch(
+        `${SB_URL}/rest/v1/sc_wellness?user_id=eq.${SB_USER}&date=eq.${dateStr}`,
+        { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
+      );
+      const existing = await checkRes.json();
+      
+      if (existing && existing.length > 0) {
+        // UPDATE existing row
+        await fetch(
+          `${SB_URL}/rest/v1/sc_wellness?user_id=eq.${SB_USER}&date=eq.${dateStr}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              hrv: w.hrv || null,
+              sleep_score: w.sleep || null,
+              sleep_hours: w.sleepH || null,
+              updated_at: new Date().toISOString()
+            })
+          }
+        );
+      } else {
+        // INSERT new row
+        await fetch(`${SB_URL}/rest/v1/sc_wellness`, {
+          method: 'POST',
+          headers: {
+            'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: SB_USER,
+            date: dateStr,
+            hrv: w.hrv || null,
+            sleep_score: w.sleep || null,
+            sleep_hours: w.sleepH || null,
+            updated_at: new Date().toISOString()
+          })
+        });
+      }
     } catch(e) { console.log('setWellness error:', e); }
   },
   async deleteWellness(dateStr) { localStorage.removeItem('sc_wellness_'+dateStr); await sbDelete('sc_wellness', { date: `eq.${dateStr}` }); },
