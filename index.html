@@ -338,9 +338,11 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface);
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     flex-shrink: 0;
+    touch-action: pan-x;
   }
   .tab-bar::-webkit-scrollbar { display: none; }
   .tab {
@@ -590,11 +592,14 @@
   .act-date { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
   .act-stats {
     display: flex;
-    gap: 16px;
+    gap: 8px;
     text-align: right;
+    flex-shrink: 0;
   }
-  .act-stat-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
-  .act-stat-lbl { font-size: 12px; color: var(--muted); }
+  .act-stat-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .act-stat-lbl { font-size: 11px; color: var(--muted); }
+  .act-name { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+  .act-date { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
   .loading-acts {
     text-align: center;
     color: var(--muted);
@@ -759,8 +764,8 @@
           <div class="stat-lbl">HFmax</div>
         </div>
         <div class="stat-box">
-          <div class="stat-val accent" id="sb_hrv">~86</div>
-          <div class="stat-lbl">HRV (ms)</div>
+          <div class="stat-val accent" id="sb_hrv">—</div>
+          <div class="stat-lbl">HRV Ø 7d (ms)</div>
         </div>
       </div>
     </div>
@@ -911,25 +916,25 @@
       <!-- Input strip -->
       <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
         <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Heute eintragen</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:end;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px;">Datum</label>
-            <input type="date" id="wDate" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;"/>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Datum</label>
+            <input type="date" id="wDate" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-size:14px;font-family:'DM Mono',monospace;outline:none;"/>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px;">HRV (ms)</label>
-            <input type="number" id="wHrv" placeholder="z.B. 88" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:13px;font-family:'DM Mono',monospace;outline:none;"/>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">HRV (ms)</label>
+            <input type="number" id="wHrv" placeholder="88" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-size:16px;font-family:'DM Mono',monospace;outline:none;"/>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px;">Sleep Score (0–100)</label>
-            <input type="number" id="wSleep" placeholder="z.B. 74" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:13px;font-family:'DM Mono',monospace;outline:none;"/>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Sleep Score (0–100)</label>
+            <input type="number" id="wSleep" placeholder="74" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-size:16px;font-family:'DM Mono',monospace;outline:none;"/>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px;">Schlafdauer (h)</label>
-            <input type="number" id="wSleepH" placeholder="z.B. 7.5" step="0.25" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:13px;font-family:'DM Mono',monospace;outline:none;"/>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Schlafdauer (h)</label>
+            <input type="number" id="wSleepH" placeholder="7.5" step="0.25" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-size:16px;font-family:'DM Mono',monospace;outline:none;"/>
           </div>
-          <button onclick="saveWellness()" style="background:var(--accent);color:#000;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Speichern</button>
         </div>
+        <button onclick="saveWellness()" style="width:100%;margin-top:10px;background:var(--accent);color:#000;border:none;border-radius:7px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Speichern</button>
         <div id="wellnessSaved" style="display:none;font-size:12px;color:var(--green);margin-top:6px;">✓ Gespeichert</div>
       </div>
 
@@ -1778,6 +1783,22 @@ function getSavedClientId() { return localStorage.getItem('sc_client_id') || '';
 function getSavedClientSecret() { return localStorage.getItem('sc_client_secret') || ''; }
 
 // ─── INIT ───
+function updateHRVSidebar() {
+  // Calculate 7-day HRV average from wellness data
+  const vals = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = 'sc_wellness_' + d.toISOString().slice(0,10);
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const e = JSON.parse(raw);
+      if (e.hrv) vals.push(e.hrv);
+    }
+  }
+  const el = document.getElementById('sb_hrv');
+  if (el) el.textContent = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : '—';
+}
+
 function updateUIFromStorage() {
   // Update Strava UI
   if (stravaToken) {
@@ -1795,6 +1816,8 @@ function updateUIFromStorage() {
     if (aks) aks.style.display = 'none';
     if (akc) akc.style.display = 'block';
   }
+  // Update HRV sidebar
+  updateHRVSidebar();
   // Update profile
   const savedProfile = localStorage.getItem('sc_profile');
   if (savedProfile) {
