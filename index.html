@@ -129,7 +129,7 @@
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 20px)); box-shadow: 0 1px 0 100vmax var(--surface); }
+    .input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 20px)); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
   }
@@ -493,8 +493,6 @@
     flex-shrink: 0;
     position: sticky;
     bottom: 0;
-    /* Cover the safe area below with surface color */
-    box-shadow: 0 1px 0 100vmax var(--surface);
   }
   .input-row {
     display: flex;
