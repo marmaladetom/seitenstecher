@@ -2578,25 +2578,45 @@ async function handleOAuthCallback() {
   if (!code) { init_real(); return; }
   window.history.replaceState({}, document.title, window.location.pathname);
   localStorage.removeItem('sc_oauth_state');
+
+  // Show loading state
+  init_real();
+
   try {
-    // Try Edge Function first
     const res = await fetch(`${SB_URL}/functions/v1/strava-oauth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
       body: JSON.stringify({ code, redirect_uri: STRAVA_REDIRECT })
     });
     const data = await res.json();
+    console.log('OAuth response:', data);
     if (data.access_token) {
       stravaToken = data.access_token;
       localStorage.setItem('sc_access_token', data.access_token);
       localStorage.setItem('sc_refresh_token', data.refresh_token || '');
       localStorage.setItem('sc_token_expiry', data.expires_at || '');
-      await sbUpsert('sc_strava', { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: data.expires_at });
+      await sbUpsert('sc_strava', {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at
+      });
+      // Update UI
+      const sd = document.getElementById('stravaDisconnected');
+      if (sd) sd.style.display = 'none';
+      document.getElementById('tokenConnected').style.display = 'block';
+      updateStravaBadge(true);
+      // Load activities
+      appendMsg('coach', '✅ Strava verbunden! Lade Aktivitäten...');
+      await loadStravaActivities();
+      appendMsg('coach', `${stravaActivities.length} Aktivitäten geladen.`);
+    } else {
+      console.error('No access token in response:', data);
+      appendMsg('coach', '⚠️ Strava-Verbindung fehlgeschlagen: ' + JSON.stringify(data));
     }
   } catch(e) {
-    console.log('OAuth exchange failed, need Python script:', e);
+    console.error('OAuth error:', e);
+    appendMsg('coach', '⚠️ Verbindungsfehler: ' + e.message);
   }
-  init_real();
 }
 
 function init_real() {
