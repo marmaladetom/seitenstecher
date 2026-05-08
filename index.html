@@ -1018,30 +1018,57 @@
           <div id="prList" style="padding:8px 0;"></div>
         </div>
 
+        <!-- PR Chart -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;">PR Entwicklung</div>
+            <select id="prChartCat" onchange="renderPRChart()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;">
+              <option value="10k">10k</option>
+              <option value="5k">5k</option>
+              <option value="hm">Halbmarathon</option>
+              <option value="marathon">Marathon</option>
+              <option value="400m">400m</option>
+              <option value="1km">1km</option>
+              <option value="ftp">FTP Rad</option>
+              <option value="70.3_total">70.3 Gesamt</option>
+            </select>
+          </div>
+          <div style="padding:14px;position:relative;height:180px;">
+            <canvas id="prChart"></canvas>
+            <div id="prChartEmpty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Keine Daten für diese Kategorie</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
     <!-- PR Input Modal -->
     <div class="modal-overlay" id="prModal" onclick="if(event.target.id==='prModal')closePRModal()">
-      <div class="modal-box" onclick="event.stopPropagation()" style="max-width:380px;">
+      <div class="modal-box" onclick="event.stopPropagation()" style="max-width:400px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div class="modal-title">PR eintragen</div>
+          <div class="modal-title" id="prModalTitle">PR eintragen</div>
           <button onclick="closePRModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">×</button>
         </div>
         <div class="modal-field" style="margin-bottom:10px;">
           <label>Kategorie</label>
-          <select id="prCategory" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;">
-            <option value="10k">10k Pace (/km)</option>
-            <option value="hm">Halbmarathon (h:mm:ss)</option>
-            <option value="marathon">Marathon (h:mm:ss)</option>
-            <option value="400m">400m Pace (/km)</option>
-            <option value="1km">1km Pace (/km)</option>
+          <select id="prCategory" onchange="updatePRInputType()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;">
+            <option value="10k">10k</option>
+            <option value="5k">5k</option>
+            <option value="hm">Halbmarathon</option>
+            <option value="marathon">Marathon</option>
+            <option value="400m">400m</option>
+            <option value="1km">1km</option>
             <option value="ftp">FTP Rad (W)</option>
-            <option value="70.3_swim">70.3 Swim (min)</option>
-            <option value="70.3_bike">70.3 Bike (h:mm)</option>
-            <option value="70.3_run">70.3 Run (h:mm)</option>
-            <option value="70.3_total">70.3 Gesamt (h:mm:ss)</option>
+            <option value="70.3_swim">70.3 Swim</option>
+            <option value="70.3_bike">70.3 Bike</option>
+            <option value="70.3_run">70.3 Run</option>
+            <option value="70.3_total">70.3 Gesamt</option>
           </select>
+        </div>
+        <!-- Pace or Time toggle (only for running) -->
+        <div id="prInputTypeRow" style="display:flex;gap:0;margin-bottom:10px;">
+          <button onclick="setPRInputType('pace')" id="prTypePace" style="flex:1;padding:7px;font-size:12px;font-family:'DM Mono',monospace;background:var(--accent);color:#000;border:1px solid var(--accent);border-radius:6px 0 0 6px;cursor:pointer;font-weight:600;">Pace (/km)</button>
+          <button onclick="setPRInputType('time')" id="prTypeTime" style="flex:1;padding:7px;font-size:12px;font-family:'DM Mono',monospace;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:0 6px 6px 0;cursor:pointer;">Zeit (h:mm:ss)</button>
         </div>
         <div class="modal-row">
           <div class="modal-field">
@@ -1049,13 +1076,21 @@
             <input type="date" id="prDate" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;"/>
           </div>
           <div class="modal-field">
-            <label>Wert</label>
-            <input type="text" id="prValue" placeholder="z.B. 4:39" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:'DM Mono',monospace;outline:none;"/>
+            <label id="prValueLabel">Pace (/km)</label>
+            <input type="text" id="prValue" placeholder="4:39" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:14px;font-family:'DM Mono',monospace;outline:none;"/>
           </div>
         </div>
+        <!-- Preview of computed value -->
+        <div id="prPreview" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);display:none;"></div>
         <div class="modal-field" style="margin-bottom:14px;">
           <label>Notiz (optional)</label>
-          <input type="text" id="prNote" placeholder="z.B. Wettkampf, Training..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;"/>
+          <input type="text" id="prNote" placeholder="Wettkampf, Training, Ziel..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;"/>
+        </div>
+        <div style="margin-bottom:10px;font-size:12px;color:var(--muted);">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="prIsGoal" style="width:16px;height:16px;accent-color:var(--accent);"/>
+            Als <strong>Ziel</strong> markieren (nicht als aktuellen PR)
+          </label>
         </div>
         <div style="display:flex;gap:8px;">
           <button onclick="savePR()" style="flex:1;background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">Speichern</button>
@@ -1122,6 +1157,49 @@
           <input type="text" id="extraIcon" placeholder="🧘" style="width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:16px;outline:none;"/>
         </div>
         <button onclick="saveExtraActivity()" style="width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">Hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- Activity Detail Modal -->
+    <div class="modal-overlay" id="actDetailModal" onclick="if(event.target.id==='actDetailModal')closeActDetail()" style="z-index:200;align-items:flex-end;">
+      <div id="actDetailBox" onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border2);border-radius:16px 16px 0 0;width:100%;max-width:680px;margin:0 auto;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+            <div style="min-width:0;">
+              <div id="adName" style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:2px;"></div>
+              <div id="adMeta" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;"></div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+              <div id="adPRBadge" style="display:none;flex-wrap:wrap;gap:6px;"></div>
+              <button onclick="closeActDetail()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--muted);">×</button>
+            </div>
+          </div>
+        </div>
+        <!-- Scrollable content -->
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+          <!-- Stats grid -->
+          <div id="adStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);"></div>
+          <!-- HR Chart -->
+          <div id="adHRSection" style="display:none;padding:14px 16px;border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Pulsverlauf</div>
+            <div style="position:relative;height:120px;"><canvas id="adHRChart"></canvas></div>
+            <div id="adZoneBars" style="display:flex;gap:4px;margin-top:8px;height:6px;border-radius:3px;overflow:hidden;"></div>
+            <div id="adZoneLabels" style="display:flex;gap:4px;margin-top:4px;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);"></div>
+          </div>
+          <!-- Laps -->
+          <div id="adLapsSection" style="display:none;padding:14px 16px;border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Laps / Intervalle</div>
+            <div id="adLapsList"></div>
+          </div>
+          <!-- Loading -->
+          <div id="adLoading" style="padding:40px;text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;">Lade Details...</div>
+        </div>
+        <!-- Footer buttons -->
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;">
+          <button onclick="analyzeCurrentActivity()" style="flex:1;background:var(--accent);color:#000;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">📊 Coach analysieren</button>
+          <a id="adStravaLink" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:13px;color:var(--muted);text-decoration:none;white-space:nowrap;">Strava ↗</a>
+        </div>
       </div>
     </div>
 
@@ -2969,10 +3047,7 @@ function renderActivities() {
         </div>
       </div>
     `;
-    card.onclick = () => {
-      switchTab('chat', null);
-      quickPrompt(`Analysiere diese Strava-Aktivität für mich: ${act.name} am ${new Date(act.start_date).toLocaleDateString('de')}, ${dist}km in ${time}${pace ? ' (' + pace + '/km)' : ''}, Ø${hr} bpm. Vergleiche mit meinem Trainingsplan.`);
-    };
+    card.onclick = () => openActDetail(act);
     list.appendChild(card);
   });
 }
@@ -3274,6 +3349,255 @@ function removeExtra(kw, dk, idx) {
   renderCalendar();
 }
 
+// ── ACTIVITY DETAIL ──
+let currentDetailActivity = null;
+let adHRChartInst = null;
+
+async function openActDetail(act) {
+  currentDetailActivity = act;
+  const modal = document.getElementById('actDetailModal');
+  modal.classList.add('open');
+
+  // Basic info immediately
+  document.getElementById('adName').textContent = act.name;
+  const date = new Date(act.start_date).toLocaleDateString('de', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+  document.getElementById('adMeta').textContent = date + ' · ' + act.type;
+  document.getElementById('adLoading').style.display = 'block';
+  document.getElementById('adHRSection').style.display = 'none';
+  document.getElementById('adLapsSection').style.display = 'none';
+  document.getElementById('adPRBadge').style.display = 'none';
+
+  // Stats grid from cached data
+  const dist = act.distance ? (act.distance/1000).toFixed(2) : '—';
+  const time = act.moving_time ? formatTime(act.moving_time) : '—';
+  const pace = act.type === 'Run' && act.average_speed ? formatPace(act.moving_time, act.distance) : null;
+  const hr   = act.average_heartrate ? Math.round(act.average_heartrate) : null;
+  const hrMax = act.max_heartrate ? Math.round(act.max_heartrate) : null;
+  const cadence = act.average_cadence ? Math.round(act.average_cadence * 2) : null; // Strava gives per leg
+  const elev  = act.total_elevation_gain ? Math.round(act.total_elevation_gain) : null;
+  const cals  = act.kilojoules ? Math.round(act.kilojoules * 0.239) : null;
+  const suffer = act.suffer_score || null;
+
+  const stats = [
+    { label: 'Distanz', val: dist + ' km' },
+    { label: 'Zeit', val: time },
+    pace ? { label: 'Ø Pace', val: pace + '/km' } : { label: 'Ø Tempo', val: act.average_speed ? Math.round(act.average_speed * 3.6) + ' km/h' : '—' },
+    { label: 'Ø Puls', val: hr ? hr + ' bpm' : '—' },
+    { label: 'Max Puls', val: hrMax ? hrMax + ' bpm' : '—' },
+    cadence ? { label: 'Kadenz', val: cadence + '/min' } : { label: 'Höhenmeter', val: elev ? '+' + elev + 'm' : '—' },
+    { label: 'Kalorien', val: cals ? cals + ' kcal' : '—' },
+    { label: 'Suffer Score', val: suffer || '—' },
+    elev && cadence ? { label: 'Höhenmeter', val: '+' + elev + 'm' } : { label: '', val: '' },
+  ].filter(s => s.label);
+
+  document.getElementById('adStats').innerHTML = stats.map(s =>
+    `<div style="background:var(--surface);padding:10px 14px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">${s.label}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;">${s.val}</div>
+    </div>`
+  ).join('');
+
+  // Strava link
+  document.getElementById('adStravaLink').href = 'https://www.strava.com/activities/' + act.id;
+
+  // Load detail from API
+  const token = localStorage.getItem('sc_access_token');
+  if (!token) { document.getElementById('adLoading').textContent = 'Kein Strava-Token — Login nötig'; return; }
+
+  try {
+    const [detailRes, lapsRes] = await Promise.all([
+      fetch(`https://www.strava.com/api/v3/activities/${act.id}`, { headers: { 'Authorization': 'Bearer ' + token } }),
+      fetch(`https://www.strava.com/api/v3/activities/${act.id}/laps`, { headers: { 'Authorization': 'Bearer ' + token } })
+    ]);
+
+    const detail = await detailRes.json();
+    const laps   = await lapsRes.json();
+
+    document.getElementById('adLoading').style.display = 'none';
+
+    // PR / Achievement badges
+    const badges = document.getElementById('adPRBadge');
+    if (detail.segment_efforts || detail.best_efforts) {
+      // Parse best_efforts for PR rank
+      const efforts = detail.best_efforts || [];
+      let gold = 0, silver = 0, bronze = 0;
+      efforts.forEach(e => {
+        if (e.achievements) {
+          e.achievements.forEach(a => {
+            if (a.type === 'pr' || a.type_id === 3) {
+              if (a.rank === 1) gold++;
+              else if (a.rank === 2) silver++;
+              else if (a.rank === 3) bronze++;
+            }
+          });
+        }
+      });
+      let badgeHTML = '';
+      if (gold)   badgeHTML += `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${gold} PR${gold>1?'s':''}</div>`;
+      if (silver) badgeHTML += `<div style="background:rgba(192,192,192,0.15);border:1px solid rgba(192,192,192,0.4);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#c0c0c0;">🥈 ${silver} 2. Platz</div>`;
+      if (bronze) badgeHTML += `<div style="background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#cd7f32;">🥉 ${bronze} 3. Platz</div>`;
+      if (badgeHTML) {
+        badges.style.display = 'flex';
+        badges.style.gap = '6px';
+        badges.style.flexWrap = 'wrap';
+        badges.innerHTML = badgeHTML;
+      }
+    } else if (detail.pr_count > 0) {
+      // Fallback if best_efforts not available
+      badges.style.display = 'block';
+      badges.innerHTML = `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${detail.pr_count} PR${detail.pr_count>1?'s':''}</div>`;
+    }
+
+    // HR Chart (use laps for HR data points)
+    if (laps && laps.length && laps.some(l => l.average_heartrate)) {
+      document.getElementById('adHRSection').style.display = 'block';
+      renderActivityHRChart(laps, detail);
+    }
+
+    // Laps table
+    if (laps && laps.length > 1) {
+      document.getElementById('adLapsSection').style.display = 'block';
+      renderLapsTable(laps, act.type);
+    }
+
+  } catch(e) {
+    document.getElementById('adLoading').textContent = 'Fehler beim Laden: ' + e.message;
+  }
+}
+
+function renderActivityHRChart(laps, detail) {
+  if (typeof Chart === 'undefined') return;
+  const labels = laps.map((l, i) => 'L' + (i+1));
+  const hrData = laps.map(l => l.average_heartrate ? Math.round(l.average_heartrate) : null);
+
+  // Zone colors for each lap
+  const profile = JSON.parse(localStorage.getItem('sc_profile') || '{}');
+  const z = Object.assign({}, { z1lo:120,z1hi:139,z2lo:140,z2hi:162,z3lo:163,z3hi:170,z4lo:171,z4hi:177,z5lo:178,z5hi:199 }, profile);
+  const getZoneColor = hr => {
+    if (!hr) return '#555';
+    if (hr <= z.z1hi) return '#4a9eff';
+    if (hr <= z.z2hi) return '#3ecf6e';
+    if (hr <= z.z3hi) return '#e8ff47';
+    if (hr <= z.z4hi) return '#ffb547';
+    return '#ff5555';
+  };
+
+  if (adHRChartInst) adHRChartInst.destroy();
+  adHRChartInst = new Chart(document.getElementById('adHRChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: hrData,
+        backgroundColor: hrData.map(hr => getZoneColor(hr) + 'cc'),
+        borderColor: hrData.map(hr => getZoneColor(hr)),
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(20,20,24,0.95)',
+          bodyColor: '#f0f0f0', titleColor: '#888',
+          borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: {
+            label: (item) => ' Ø ' + item.raw + ' bpm'
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#555', font:{size:9} }, grid:{display:false} },
+        y: { min: Math.max(0, Math.min(...hrData.filter(Boolean)) - 10),
+             ticks: { color:'#555', font:{size:9} }, grid:{color:'rgba(255,255,255,0.04)'} }
+      }
+    }
+  });
+
+  // Zone distribution bars
+  const zoneCounts = [0,0,0,0,0];
+  hrData.filter(Boolean).forEach(hr => {
+    if (hr <= z.z1hi) zoneCounts[0]++;
+    else if (hr <= z.z2hi) zoneCounts[1]++;
+    else if (hr <= z.z3hi) zoneCounts[2]++;
+    else if (hr <= z.z4hi) zoneCounts[3]++;
+    else zoneCounts[4]++;
+  });
+  const total = zoneCounts.reduce((a,b)=>a+b,0) || 1;
+  const zoneColors = ['#4a9eff','#3ecf6e','#e8ff47','#ffb547','#ff5555'];
+  const zoneNames  = ['Z1','Z2','Z3','Z4','Z5'];
+  document.getElementById('adZoneBars').innerHTML = zoneCounts.map((c,i) =>
+    `<div style="flex:${c};background:${zoneColors[i]};opacity:0.8;min-width:${c>0?'4px':'0'};"></div>`
+  ).join('');
+  document.getElementById('adZoneLabels').innerHTML = zoneCounts.map((c,i) =>
+    c > 0 ? `<span style="flex:${c};color:${zoneColors[i]};text-align:center;min-width:${c>0?'4px':'0'}">${zoneNames[i]} ${Math.round(c/total*100)}%</span>` : ''
+  ).join('');
+}
+
+function renderLapsTable(laps, actType) {
+  const isRun = actType === 'Run';
+  let html = `<div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:400;">#</th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Dist</th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Zeit</th>
+          ${isRun ? '<th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Pace</th>' : '<th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">km/h</th>'}
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Puls</th>
+          ${laps.some(l=>l.average_cadence) ? '<th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Kad</th>' : ''}
+        </tr>
+      </thead>
+      <tbody>`;
+
+  laps.forEach((lap, i) => {
+    const dist = lap.distance ? (lap.distance/1000).toFixed(2) : '—';
+    const time = lap.elapsed_time ? formatTime(lap.elapsed_time) : '—';
+    const pace = isRun && lap.average_speed ? formatPace(lap.elapsed_time, lap.distance) : null;
+    const speed = !isRun && lap.average_speed ? Math.round(lap.average_speed*3.6) : null;
+    const hr   = lap.average_heartrate ? Math.round(lap.average_heartrate) : '—';
+    const kad  = lap.average_cadence ? Math.round(lap.average_cadence*2) : null;
+    const profile = JSON.parse(localStorage.getItem('sc_profile') || '{}');
+    const z = Object.assign({}, { z1hi:139,z2hi:162,z3hi:170,z4hi:177 }, profile);
+    const hrNum = lap.average_heartrate;
+    const hrColor = !hrNum ? 'var(--text)' : hrNum<=z.z1hi ? '#4a9eff' : hrNum<=z.z2hi ? '#3ecf6e' : hrNum<=z.z3hi ? '#e8ff47' : hrNum<=z.z4hi ? '#ffb547' : '#ff5555';
+    const isActive = lap.lap_index !== undefined;
+
+    html += `<tr style="border-bottom:1px solid var(--border);${i%2===0?'background:rgba(255,255,255,0.01)':''}">
+      <td style="padding:6px 8px;color:var(--muted);">${i+1}</td>
+      <td style="padding:6px 8px;text-align:right;">${dist}km</td>
+      <td style="padding:6px 8px;text-align:right;">${time}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--accent);">${pace ? pace+'/km' : speed ? speed+'km/h' : '—'}</td>
+      <td style="padding:6px 8px;text-align:right;color:${hrColor};">${hr}${typeof hr==='number'?' bpm':''}</td>
+      ${laps.some(l=>l.average_cadence) ? `<td style="padding:6px 8px;text-align:right;color:var(--muted);">${kad||'—'}</td>` : ''}
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('adLapsList').innerHTML = html;
+}
+
+function closeActDetail() {
+  document.getElementById('actDetailModal').classList.remove('open');
+  if (adHRChartInst) { adHRChartInst.destroy(); adHRChartInst = null; }
+  currentDetailActivity = null;
+}
+
+function analyzeCurrentActivity() {
+  if (!currentDetailActivity) return;
+  const act = currentDetailActivity;
+  const dist = (act.distance/1000).toFixed(2);
+  const time = formatTime(act.moving_time);
+  const pace = act.type === 'Run' ? formatPace(act.moving_time, act.distance) : null;
+  const hr = act.average_heartrate ? Math.round(act.average_heartrate) : null;
+  const msg = `Analysiere diese Strava-Aktivität: ${act.name} am ${new Date(act.start_date).toLocaleDateString('de')}, ${dist}km in ${time}${pace?' ('+pace+'/km)':''}${hr?' Ø'+hr+'bpm':''}. Vergleiche mit meinem Trainingsplan und den Pulszonen.`;
+  closeActDetail();
+  switchTab('chat', null);
+  quickPrompt(msg);
+}
+
 // ── STRAVA HELPERS ──
 function stravaTypeMatches(stravaType, planType) {
   const map = {
@@ -3406,17 +3730,68 @@ function exportPDF() {
 
 // ── PROGRESS ──
 const PR_CATEGORIES = {
-  '10k':       { label: '10k Pace', unit: '/km', lower_is_better: true },
-  'hm':        { label: 'Halbmarathon', unit: 'Zeit', lower_is_better: true },
-  'marathon':  { label: 'Marathon', unit: 'Zeit', lower_is_better: true },
-  '400m':      { label: '400m Pace', unit: '/km', lower_is_better: true },
-  '1km':       { label: '1km Pace', unit: '/km', lower_is_better: true },
-  'ftp':       { label: 'FTP Rad', unit: 'W', lower_is_better: false },
-  '70.3_swim': { label: '70.3 Swim', unit: 'min', lower_is_better: true },
-  '70.3_bike': { label: '70.3 Bike', unit: 'h:mm', lower_is_better: true },
-  '70.3_run':  { label: '70.3 Run', unit: 'h:mm', lower_is_better: true },
-  '70.3_total':{ label: '70.3 Gesamt', unit: 'Zeit', lower_is_better: true },
+  '10k':       { label: '10k', distKm: 10,    hasPace: true,  lower_is_better: true },
+  'hm':        { label: 'Halbmarathon', distKm: 21.0975, hasPace: true, lower_is_better: true },
+  'marathon':  { label: 'Marathon', distKm: 42.195, hasPace: true, lower_is_better: true },
+  '400m':      { label: '400m', distKm: 0.4,  hasPace: true,  lower_is_better: true },
+  '1km':       { label: '1km', distKm: 1.0,   hasPace: true,  lower_is_better: true },
+  '5k':        { label: '5k', distKm: 5.0,    hasPace: true,  lower_is_better: true },
+  'ftp':       { label: 'FTP Rad', distKm: null, hasPace: false, unit: 'W', lower_is_better: false },
+  '70.3_swim': { label: '70.3 Swim', distKm: 1.9, hasPace: false, unit: 'min', lower_is_better: true },
+  '70.3_bike': { label: '70.3 Bike', distKm: 90,  hasPace: false, unit: 'h:mm', lower_is_better: true },
+  '70.3_run':  { label: '70.3 Run', distKm: 21.0975, hasPace: true, lower_is_better: true },
+  '70.3_total':{ label: '70.3 Gesamt', distKm: null, hasPace: false, unit: 'h:mm:ss', lower_is_better: true },
 };
+
+// ── Pace/Time conversion helpers ──
+function paceToSeconds(pace) {
+  // "4:39" → seconds per km
+  const parts = pace.trim().split(':');
+  if (parts.length === 2) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  return null;
+}
+
+function timeToSeconds(time) {
+  // "1:54:00" or "1:54" → total seconds
+  const parts = time.trim().split(':');
+  if (parts.length === 3) return parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2]);
+  if (parts.length === 2) return parseInt(parts[0])*3600 + parseInt(parts[1])*60;
+  return null;
+}
+
+function secondsToPace(secs) {
+  // seconds per km → "4:39"
+  const m = Math.floor(secs / 60);
+  const s = Math.round(secs % 60);
+  return m + ':' + String(s).padStart(2,'0');
+}
+
+function secondsToTime(secs) {
+  // total seconds → "1:54:00"
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = Math.round(secs % 60);
+  return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function computePRBoth(cat, inputType, value) {
+  // inputType: 'pace' or 'time', value: string
+  // Returns { pace, time } both as display strings
+  const catInfo = PR_CATEGORIES[cat];
+  if (!catInfo || !catInfo.hasPace || !catInfo.distKm) return { pace: value, time: value };
+  const dist = catInfo.distKm;
+  if (inputType === 'pace') {
+    const paceS = paceToSeconds(value);
+    if (!paceS) return { pace: value, time: '?' };
+    const totalS = paceS * dist;
+    return { pace: value, time: secondsToTime(totalS) };
+  } else {
+    const totalS = timeToSeconds(value);
+    if (!totalS) return { pace: '?', time: value };
+    const paceS = totalS / dist;
+    return { pace: secondsToPace(paceS), time: value };
+  }
+}
 
 function getPRs() {
   try { return JSON.parse(localStorage.getItem('sc_prs') || '[]'); } catch { return []; }
@@ -3427,33 +3802,124 @@ function savePRs(prs) {
   sbUpsert('sc_prs_data', { prs_json: JSON.stringify(prs) }).catch(()=>{});
 }
 
-function openPRModal() {
+let prEditIdx = null;
+let prInputType = 'pace';
+
+function updatePRInputType() {
+  const cat = document.getElementById('prCategory').value;
+  const catInfo = PR_CATEGORIES[cat];
+  const row = document.getElementById('prInputTypeRow');
+  const preview = document.getElementById('prPreview');
+  if (catInfo && catInfo.hasPace) {
+    row.style.display = 'flex';
+    updatePRPreview();
+  } else {
+    row.style.display = 'none';
+    preview.style.display = 'none';
+    const label = document.getElementById('prValueLabel');
+    if (label) label.textContent = catInfo?.unit || 'Wert';
+  }
+}
+
+function setPRInputType(type) {
+  prInputType = type;
+  document.getElementById('prTypePace').style.background = type === 'pace' ? 'var(--accent)' : 'var(--surface2)';
+  document.getElementById('prTypePace').style.color = type === 'pace' ? '#000' : 'var(--muted)';
+  document.getElementById('prTypePace').style.borderColor = type === 'pace' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('prTypeTime').style.background = type === 'time' ? 'var(--accent)' : 'var(--surface2)';
+  document.getElementById('prTypeTime').style.color = type === 'time' ? '#000' : 'var(--muted)';
+  document.getElementById('prTypeTime').style.borderColor = type === 'time' ? 'var(--accent)' : 'var(--border)';
+  const label = document.getElementById('prValueLabel');
+  if (label) label.textContent = type === 'pace' ? 'Pace (/km)' : 'Zeit (h:mm:ss)';
+  const input = document.getElementById('prValue');
+  if (input) input.placeholder = type === 'pace' ? '4:39' : '0:46:30';
+  updatePRPreview();
+}
+
+function updatePRPreview() {
+  const cat = document.getElementById('prCategory').value;
+  const val = document.getElementById('prValue').value.trim();
+  const preview = document.getElementById('prPreview');
+  if (!val) { preview.style.display = 'none'; return; }
+  const both = computePRBoth(cat, prInputType, val);
+  if (both.pace !== val || both.time !== val) {
+    preview.style.display = 'block';
+    preview.innerHTML = prInputType === 'pace'
+      ? `→ Finishzeit: <strong style="color:var(--text);">${both.time}</strong>`
+      : `→ Pace: <strong style="color:var(--text);">${both.pace}/km</strong>`;
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function openPRModal(editIdx = null) {
+  prEditIdx = editIdx;
+  prInputType = 'pace';
+  document.getElementById('prModalTitle').textContent = editIdx !== null ? 'PR bearbeiten' : 'PR eintragen';
   document.getElementById('prDate').value = new Date().toISOString().slice(0,10);
   document.getElementById('prValue').value = '';
   document.getElementById('prNote').value = '';
+  document.getElementById('prIsGoal').checked = false;
+  document.getElementById('prPreview').style.display = 'none';
+  setPRInputType('pace');
+
+  if (editIdx !== null) {
+    const pr = getPRs()[editIdx];
+    if (pr) {
+      document.getElementById('prCategory').value = pr.cat;
+      document.getElementById('prDate').value = pr.date;
+      document.getElementById('prNote').value = pr.note || '';
+      document.getElementById('prIsGoal').checked = pr.isGoal || false;
+      if (pr.pace) { setPRInputType('pace'); document.getElementById('prValue').value = pr.pace; }
+      else if (pr.time) { setPRInputType('time'); document.getElementById('prValue').value = pr.time; }
+      else document.getElementById('prValue').value = pr.value || '';
+    }
+  }
+  updatePRInputType();
+  document.getElementById('prValue').addEventListener('input', updatePRPreview);
   document.getElementById('prModal').classList.add('open');
 }
-function closePRModal() { document.getElementById('prModal').classList.remove('open'); }
+
+function closePRModal() {
+  document.getElementById('prModal').classList.remove('open');
+  prEditIdx = null;
+}
 
 function savePR() {
   const cat = document.getElementById('prCategory').value;
   const date = document.getElementById('prDate').value;
-  const value = document.getElementById('prValue').value.trim();
+  const rawValue = document.getElementById('prValue').value.trim();
   const note = document.getElementById('prNote').value.trim();
-  if (!date || !value) return;
+  const isGoal = document.getElementById('prIsGoal').checked;
+  if (!date || !rawValue) return;
+
+  const catInfo = PR_CATEGORIES[cat];
+  let pace = null, time = null, value = rawValue;
+  if (catInfo && catInfo.hasPace) {
+    const both = computePRBoth(cat, prInputType, rawValue);
+    pace = both.pace;
+    time = both.time;
+    value = prInputType === 'pace' ? pace : time;
+  }
+
   const prs = getPRs();
-  prs.push({ cat, date, value, note, savedAt: new Date().toISOString() });
+  const entry = { cat, date, value, pace, time, note, isGoal, savedAt: new Date().toISOString() };
+  if (prEditIdx !== null) prs[prEditIdx] = entry;
+  else prs.push(entry);
   prs.sort((a,b) => a.date.localeCompare(b.date));
   savePRs(prs);
   closePRModal();
   renderPRList();
+  renderPRChart();
 }
 
 function deletePR(idx) {
+  if (!confirm('PR löschen?')) return;
   const prs = getPRs();
   prs.splice(idx, 1);
   savePRs(prs);
   renderPRList();
+  renderPRChart();
 }
 
 function renderPRList() {
@@ -3585,6 +4051,92 @@ function initProgress() {
   }
   setProgressRange(90);
   renderPRList();
+  setTimeout(() => renderPRChart(), 100);
+}
+
+let prChartInst = null;
+
+function renderPRChart() {
+  if (typeof Chart === 'undefined') return;
+  const cat = document.getElementById('prChartCat')?.value || '10k';
+  const catInfo = PR_CATEGORIES[cat];
+  const prs = getPRs().filter(p => p.cat === cat && !p.isGoal);
+  const empty = document.getElementById('prChartEmpty');
+
+  if (!prs.length) {
+    if (empty) empty.style.display = 'flex';
+    if (prChartInst) { prChartInst.destroy(); prChartInst = null; }
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  // Convert values to seconds for plotting (lower = better for running)
+  const dataPoints = prs.map(p => {
+    let secs = null;
+    if (p.pace) secs = paceToSeconds(p.pace) * (catInfo.distKm || 1);
+    else if (p.time) secs = timeToSeconds(p.time);
+    else if (p.value) {
+      secs = paceToSeconds(p.value) || timeToSeconds(p.value);
+      if (catInfo.distKm && paceToSeconds(p.value)) secs = paceToSeconds(p.value) * catInfo.distKm;
+    }
+    return { date: p.date, secs, label: p.pace && p.time ? p.pace+'/km · '+p.time : p.value };
+  }).filter(d => d.secs);
+
+  if (!dataPoints.length) { if (empty) empty.style.display = 'flex'; return; }
+
+  if (prChartInst) prChartInst.destroy();
+  prChartInst = new Chart(document.getElementById('prChart'), {
+    type: 'line',
+    data: {
+      labels: dataPoints.map(d => d.date.slice(5)),
+      datasets: [{
+        data: dataPoints.map(d => d.secs),
+        borderColor: '#e8ff47',
+        backgroundColor: 'rgba(232,255,71,0.08)',
+        borderWidth: 2,
+        fill: true,
+        pointBackgroundColor: '#e8ff47',
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(20,20,24,0.95)',
+          titleColor: '#888', bodyColor: '#f0f0f0',
+          borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 8,
+          titleFont: { family: 'DM Mono, monospace', size: 11 },
+          bodyFont: { family: 'DM Mono, monospace', size: 12 },
+          callbacks: {
+            title: (items) => dataPoints[items[0].dataIndex]?.date || '',
+            label: (item) => ' ' + (dataPoints[item.dataIndex]?.label || item.raw)
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#555', font:{size:10} }, grid:{color:'rgba(255,255,255,0.04)'} },
+        y: {
+          reverse: catInfo.lower_is_better,
+          ticks: {
+            color:'#555', font:{size:10},
+            callback: (val) => {
+              // Convert seconds back to display format
+              if (catInfo.hasPace && catInfo.distKm) {
+                const paceS = val / catInfo.distKm;
+                return secondsToPace(paceS);
+              }
+              return secondsToTime(val);
+            }
+          },
+          grid:{color:'rgba(255,255,255,0.04)'}
+        }
+      }
+    }
+  });
 }
 
 function renderProgress() {
