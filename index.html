@@ -995,7 +995,7 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      <div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
+      <div id="progressScroll" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
 
         <!-- CTL/ATL/TSB Chart -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
@@ -1506,11 +1506,11 @@ const db = {
         if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
       }
       // UI updated by caller via updateUIFromStorage()
-      // Load PRs from Supabase
+      // Load PRs from Supabase - cloud is authoritative
       const prRows = await sbGet('sc_prs_data', { user_id: `eq.${SB_USER}` });
       if (prRows[0] && prRows[0].prs_json) {
-        const cloudPRs = JSON.parse(prRows[0].prs_json);
-        if (cloudPRs.length > 0) localStorage.setItem('sc_prs', JSON.stringify(cloudPRs));
+        // Cloud data replaces local - this prevents ghost entries
+        localStorage.setItem('sc_prs', prRows[0].prs_json);
       }
       if (badge) { badge.textContent = '☁️ ✓'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge){badge.textContent='☁️';badge.style.color='var(--muted)';} }, 3000); }
     } catch(e) {
@@ -2982,13 +2982,15 @@ function mergeStravaCache(fresh) {
 
 async function loadStravaActivities() {
   if (!stravaToken) {
-    // Load from cache even without token
-    const cached = stravaCache();
-    if (cached.length) {
-      stravaActivities = cached;
-      renderActivities();
-      updateStravaBadge(true);
+    // Try Supabase cache first, then localStorage
+    const rows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
+    if (rows[0] && rows[0].activities && rows[0].activities.length) {
+      stravaActivities = rows[0].activities;
+      localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities));
+    } else {
+      stravaActivities = stravaCache();
     }
+    if (stravaActivities.length) { renderActivities(); updateStravaBadge(true); }
     return;
   }
 
@@ -4109,8 +4111,21 @@ function initProgress() {
     const el = document.getElementById('progressStats');
     if (el) el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
+  // Set scroll container height explicitly based on panel height
+  const panel = document.getElementById('progressPanel');
+  const scroll = document.getElementById('progressScroll');
+  if (panel && scroll) {
+    // Get non-scrolling children heights
+    const children = panel.children;
+    let fixedHeight = 0;
+    for (let i = 0; i < children.length - 1; i++) {
+      fixedHeight += children[i].offsetHeight;
+    }
+    const panelHeight = panel.offsetHeight || window.innerHeight - 120;
+    scroll.style.height = (panelHeight - fixedHeight) + 'px';
+    scroll.style.overflowY = 'auto';
+  }
   renderPRList();
-  // rAF ensures panel visible + Chart.js loaded before rendering
   requestAnimationFrame(() => {
     setProgressRange(progressDays || 90);
     requestAnimationFrame(() => renderPRChart());
