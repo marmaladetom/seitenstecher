@@ -3493,6 +3493,11 @@ async function openActDetail(act) {
 
 function renderActivityHRChart(laps, detail) {
   if (typeof Chart === 'undefined') return;
+  const canvas = document.getElementById('adHRChart');
+  if (!canvas || canvas.offsetWidth === 0) {
+    setTimeout(() => renderActivityHRChart(laps, detail), 200);
+    return;
+  }
   const labels = laps.map((l, i) => 'L' + (i+1));
   const hrData = laps.map(l => l.average_heartrate ? Math.round(l.average_heartrate) : null);
 
@@ -3955,34 +3960,60 @@ function renderPRList() {
   const prs = getPRs();
   const container = document.getElementById('prList');
   if (!prs.length) {
-    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Noch keine PRs eingetragen</div>';
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Noch keine PRs eingetragen — klick "+ PR eintragen"</div>';
     return;
   }
-  // Group by category
   const grouped = {};
-  prs.forEach((pr, idx) => {
+  prs.forEach((pr, origIdx) => {
     if (!grouped[pr.cat]) grouped[pr.cat] = [];
-    grouped[pr.cat].push({ ...pr, idx });
+    grouped[pr.cat].push({ ...pr, origIdx });
   });
   let html = '';
   Object.entries(grouped).forEach(([cat, entries]) => {
-    const catInfo = PR_CATEGORIES[cat] || { label: cat, unit: '' };
-    const best = entries[entries.length - 1];
-    html += `<div style="padding:10px 14px;border-bottom:1px solid var(--border);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
-        <span style="font-size:13px;font-weight:500;">${catInfo.label}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);">▲ ${best.value} ${catInfo.unit}</span>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        ${entries.map(e => `
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;font-size:11px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:5px;flex-shrink:0;">
-            <span style="color:var(--muted);">${e.date.slice(5)}</span>
-            <span style="color:var(--text);">${e.value}</span>
-            ${e.note ? `<span style="color:var(--muted2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">· ${e.note}</span>` : ''}
-            <button onclick="deletePR(${e.idx})" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:10px;padding:0;line-height:1;">✕</button>
-          </div>`).join('')}
-      </div>
-    </div>`;
+    const catInfo = PR_CATEGORIES[cat] || { label: cat };
+    const actual = entries.filter(e => !e.isGoal);
+    const goals  = entries.filter(e => e.isGoal);
+    const best   = actual[actual.length - 1] || entries[entries.length - 1];
+    const bestDisplay = best.pace && best.time ? best.pace + '/km · ' + best.time : best.value;
+    html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border);">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px;">';
+    html += '<span style="font-size:13px;font-weight:600;">' + catInfo.label + '</span>';
+    html += '<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);">▲ ' + bestDisplay + '</span>';
+    html += '</div>';
+    if (actual.length) {
+      html += '<div style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Einträge</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;">';
+      actual.forEach(e => {
+        const display = e.pace && e.time
+          ? '<span style="color:var(--accent);">' + e.pace + '/km</span> · ' + e.time
+          : e.value;
+        const note = e.note ? ' · <span style="color:var(--muted2);font-size:10px;">' + e.note + '</span>' : '';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;">';
+        html += '<span style="color:var(--muted);min-width:40px;">' + e.date.slice(5) + '</span>';
+        html += '<span style="flex:1;margin:0 8px;">' + display + note + '</span>';
+        html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
+        html += '<button onclick="openPRModal(' + e.origIdx + ')" style="background:rgba(232,255,71,0.12);border:1px solid rgba(232,255,71,0.25);color:var(--accent);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✎</button>';
+        html += '<button onclick="deletePR(' + e.origIdx + ')" style="background:rgba(255,85,85,0.12);border:1px solid rgba(255,85,85,0.25);color:var(--red);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✕</button>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+    if (goals.length) {
+      html += '<div style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Ziele</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+      goals.forEach(e => {
+        const display = e.pace && e.time ? e.pace + '/km · ' + e.time : e.value;
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(232,255,71,0.04);border:1px solid rgba(232,255,71,0.15);border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;">';
+        html += '<span style="color:var(--muted);min-width:40px;">' + e.date.slice(5) + '</span>';
+        html += '<span style="flex:1;margin:0 8px;color:var(--accent);">🎯 ' + display + '</span>';
+        html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
+        html += '<button onclick="openPRModal(' + e.origIdx + ')" style="background:rgba(232,255,71,0.12);border:1px solid rgba(232,255,71,0.25);color:var(--accent);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✎</button>';
+        html += '<button onclick="deletePR(' + e.origIdx + ')" style="background:rgba(255,85,85,0.12);border:1px solid rgba(255,85,85,0.25);color:var(--red);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✕</button>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
   });
   container.innerHTML = html;
 }
@@ -4076,25 +4107,26 @@ function setProgressRange(days) {
 
 function initProgress() {
   if (!stravaActivities.length) {
-    document.getElementById('progressStats').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
+    const el = document.getElementById('progressStats');
+    if (el) el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
   renderPRList();
-  // Wait for Chart.js then render all charts
-  const _waitChart = setInterval(() => {
-    if (typeof Chart !== 'undefined') {
-      clearInterval(_waitChart);
-      setProgressRange(progressDays || 90);
-      setTimeout(() => renderPRChart(), 150);
-    }
-  }, 100);
-  // Timeout fallback
-  setTimeout(() => clearInterval(_waitChart), 5000);
+  // Charts need Chart.js AND visible canvas - renderProgress/renderPRChart handle this internally
+  setProgressRange(progressDays || 90);
+  renderPRChart();
 }
 
 let prChartInst = null;
 
 function renderPRChart() {
   if (typeof Chart === 'undefined') return;
+  // Ensure canvas has dimensions (panel must be visible)
+  const canvas = document.getElementById('prChart');
+  if (!canvas || canvas.offsetWidth === 0) {
+    // Panel not visible yet - retry after a short delay
+    setTimeout(renderPRChart, 200);
+    return;
+  }
   const cat = document.getElementById('prChartCat')?.value || '10k';
   const catInfo = PR_CATEGORIES[cat];
   const prs = getPRs().filter(p => p.cat === cat && !p.isGoal);
@@ -4177,6 +4209,12 @@ function renderPRChart() {
 }
 
 function renderProgress() {
+  // Ensure canvas has dimensions
+  const ctlCanvas = document.getElementById('ctlChart');
+  if (!ctlCanvas || ctlCanvas.offsetWidth === 0) {
+    setTimeout(renderProgress, 200);
+    return;
+  }
   const days = progressDays === 0
     ? Math.max(90, Math.ceil((new Date() - new Date(stravaActivities[stravaActivities.length-1]?.start_date || new Date())) / 86400000) + 30)
     : progressDays;
