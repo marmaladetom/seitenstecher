@@ -1033,7 +1033,7 @@
               <option value="70.3_total">70.3 Gesamt</option>
             </select>
           </div>
-          <div style="padding:14px;position:relative;height:180px;">
+          <div style="padding:14px;position:relative;height:200px;min-height:200px;">
             <canvas id="prChart"></canvas>
             <div id="prChartEmpty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Keine Daten für diese Kategorie</div>
           </div>
@@ -2646,11 +2646,15 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab')[['chat','activities','plan','profil','wellness','progress'].indexOf(tab)].classList.add('active');
 
-  document.getElementById('chatPanel').style.display = tab === 'chat' ? 'flex' : 'none';
-  document.getElementById('activitiesPanel').style.display = tab === 'activities' ? 'flex' : 'none';
-  document.getElementById('planPanel').style.display = tab === 'plan' ? 'flex' : 'none';
-  document.getElementById('profilPanel').style.display = tab === 'profil' ? 'flex' : 'none';
-  document.getElementById('wellnessPanel').style.display = tab === 'wellness' ? 'flex' : 'none';
+  // Hide ALL panels first
+  ['chatPanel','activitiesPanel','planPanel','profilPanel','wellnessPanel','progressPanel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Show only active panel
+  const panelMap = { chat:'chatPanel', activities:'activitiesPanel', plan:'planPanel', profil:'profilPanel', wellness:'wellnessPanel', progress:'progressPanel' };
+  const activePanel = document.getElementById(panelMap[tab]);
+  if (activePanel) activePanel.style.display = 'flex';
 
   if (tab === 'activities' && stravaToken && stravaActivities.length === 0) {
     loadStravaActivities();
@@ -2667,7 +2671,6 @@ function switchTab(tab, el) {
   if (tab === 'progress') {
     initProgress();
   }
-  document.getElementById('progressPanel').style.display = tab === 'progress' ? 'flex' : 'none';
 }
 
 // ─── PROFIL EDITOR ───
@@ -4065,9 +4068,29 @@ function initProgress() {
   if (!stravaActivities.length) {
     document.getElementById('progressStats').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
-  setProgressRange(90);
+  // Ensure Chart.js is loaded
+  if (typeof Chart === 'undefined') {
+    const _progWait = setInterval(() => {
+      if (typeof Chart !== 'undefined') {
+        clearInterval(_progWait);
+        setProgressRange(progressDays || 90);
+      }
+    }, 200);
+  } else {
+    setProgressRange(90);
+  }
   renderPRList();
-  setTimeout(() => renderPRChart(), 100);
+  if (typeof Chart !== 'undefined') {
+    setTimeout(() => renderPRChart(), 100);
+  } else {
+    // Wait for Chart.js to load
+    const _prWait = setInterval(() => {
+      if (typeof Chart !== 'undefined') {
+        clearInterval(_prWait);
+        renderPRChart();
+      }
+    }, 200);
+  }
 }
 
 let prChartInst = null;
