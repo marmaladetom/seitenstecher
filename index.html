@@ -133,13 +133,10 @@
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
     /* Progress tab mobile */
-    #progressPanel { overflow: hidden !important; }
-    #progressPanel > div:last-child { overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
-    #progressPanel canvas { height: 120px !important; }
+    #progressPanel { display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+    #progressPanel canvas { max-height: 120px !important; }
     #progressStats { gap: 6px !important; }
     #progressStats > div { padding: 6px 8px !important; }
-    #prList div { font-size: 12px !important; }
-    #prChart { height: 150px !important; }
   }
 
   /* ─── SIDEBAR ─── */
@@ -975,7 +972,7 @@
     </div>
 
     <!-- Progress Panel -->
-    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;height:100%;overflow:hidden;">
+    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;">
 
       <!-- Time range selector -->
       <div style="display:flex;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);">
@@ -987,7 +984,7 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;">
+      <div style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;overscroll-behavior:contain;">
 
         <!-- CTL/ATL/TSB Chart -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
@@ -3430,9 +3427,6 @@ async function openActDetail(act) {
     const laps   = await lapsRes.json();
 
     document.getElementById('adLoading').style.display = 'none';
-    // Force layout update
-    document.getElementById('adHRSection').style.display = 'none';
-    document.getElementById('adLapsSection').style.display = 'none';
 
     // PR / Achievement badges
     const badges = document.getElementById('adPRBadge');
