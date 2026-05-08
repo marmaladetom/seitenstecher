@@ -124,9 +124,11 @@
     .app { flex-direction: column; height: calc(100vh - 57px - env(safe-area-inset-top)); }
     .sidebar { width: 100% !important; min-width: unset !important; max-height: 0; overflow: hidden; border-right: none; border-bottom: 1px solid var(--border); transition: max-height 0.3s ease; }
     .sidebar.open { max-height: 80vh; overflow-y: auto; }
-    .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .chat-panel { flex: 1; min-height: 0; }
+    .main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .messages { flex: 1; min-height: 0; }
+    #progressPanel, #wellnessPanel { flex: 1; min-height: 0; overflow: hidden; }
+    #progressPanel > div:nth-child(3) { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
     .logo-sub { display: none; }
     #menuToggle { display: flex !important; }
     #syncBadge { display: none; }
@@ -1504,6 +1506,12 @@ const db = {
         if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
       }
       // UI updated by caller via updateUIFromStorage()
+      // Load PRs from Supabase
+      const prRows = await sbGet('sc_prs_data', { user_id: `eq.${SB_USER}` });
+      if (prRows[0] && prRows[0].prs_json) {
+        const cloudPRs = JSON.parse(prRows[0].prs_json);
+        if (cloudPRs.length > 0) localStorage.setItem('sc_prs', JSON.stringify(cloudPRs));
+      }
       if (badge) { badge.textContent = '☁️ ✓'; badge.style.color = 'var(--green)'; setTimeout(() => { if(badge){badge.textContent='☁️';badge.style.color='var(--muted)';} }, 3000); }
     } catch(e) {
       console.log('Sync error:', e);
@@ -2668,8 +2676,6 @@ function switchTab(tab, el) {
     panel.style.display = 'flex';
     if (['plan','wellness','progress'].includes(tab)) {
       panel.style.flexDirection = 'column';
-      panel.style.height = '100%';
-      panel.style.overflow = 'hidden';
     }
   }
 
