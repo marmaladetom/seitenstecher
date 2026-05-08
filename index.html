@@ -983,7 +983,7 @@
     </div>
 
     <!-- Progress Panel -->
-    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;height:100%;overflow:hidden;">
+    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;overflow-y:auto;">
 
       <!-- Time range selector -->
       <div style="display:flex;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);">
@@ -995,7 +995,7 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      <div id="progressScroll" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
+      <div id="progressScroll" style="flex:1;min-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
 
         <!-- CTL/ATL/TSB Chart -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
@@ -2936,6 +2936,14 @@ function init_real() {
     buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
     renderCalendar();
+    // Auto-refresh Strava in background on every app start
+    if (stravaToken) {
+      loadStravaActivities().then(() => {
+        // Update calendar with fresh Strava matches
+        if (currentTab === 'activities') renderActivities();
+        else renderCalendar();
+      });
+    }
   });
 }
 
@@ -4111,20 +4119,7 @@ function initProgress() {
     const el = document.getElementById('progressStats');
     if (el) el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
-  // Set scroll container height explicitly based on panel height
-  const panel = document.getElementById('progressPanel');
-  const scroll = document.getElementById('progressScroll');
-  if (panel && scroll) {
-    // Get non-scrolling children heights
-    const children = panel.children;
-    let fixedHeight = 0;
-    for (let i = 0; i < children.length - 1; i++) {
-      fixedHeight += children[i].offsetHeight;
-    }
-    const panelHeight = panel.offsetHeight || window.innerHeight - 120;
-    scroll.style.height = (panelHeight - fixedHeight) + 'px';
-    scroll.style.overflowY = 'auto';
-  }
+
   renderPRList();
   requestAnimationFrame(() => {
     setProgressRange(progressDays || 90);
