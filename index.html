@@ -47,6 +47,18 @@
     display: flex;
     flex-direction: column;
   }
+  /* Fill iPhone home indicator area with surface color */
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    z-index: 999;
+    pointer-events: none;
+  }
 
   /* ─── HEADER ─── */
   header {
@@ -129,7 +141,7 @@
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 20px)); }
+    .input-area { padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
     /* Progress tab mobile */
@@ -497,12 +509,15 @@
   /* Input area */
   .input-area {
     padding: 12px 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 20px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
     position: sticky;
     bottom: 0;
+    /* Extend background color into iPhone home indicator area */
+    background-clip: padding-box;
+    margin-bottom: 0;
   }
   .input-row {
     display: flex;
@@ -2649,28 +2664,32 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab')[['chat','activities','plan','profil','wellness','progress'].indexOf(tab)].classList.add('active');
 
-  document.getElementById('chatPanel').style.display = tab === 'chat' ? 'flex' : 'none';
-  document.getElementById('activitiesPanel').style.display = tab === 'activities' ? 'flex' : 'none';
-  document.getElementById('planPanel').style.display = tab === 'plan' ? 'flex' : 'none';
-  document.getElementById('profilPanel').style.display = tab === 'profil' ? 'flex' : 'none';
-  document.getElementById('wellnessPanel').style.display = tab === 'wellness' ? 'flex' : 'none';
+  // Hide all panels first
+  ['chatPanel','activitiesPanel','planPanel','profilPanel','wellnessPanel','progressPanel'].forEach(id => {
+    const p = document.getElementById(id);
+    if (p) p.style.display = 'none';
+  });
 
+  // Show active panel
+  const panelId = {chat:'chatPanel',activities:'activitiesPanel',plan:'planPanel',profil:'profilPanel',wellness:'wellnessPanel',progress:'progressPanel'}[tab];
+  const panel = document.getElementById(panelId);
+  if (panel) {
+    panel.style.display = 'flex';
+    if (['plan','wellness','progress'].includes(tab)) panel.style.flexDirection = 'column';
+  }
+
+  // Init tab content — rAF ensures panel is painted before charts render
   if (tab === 'activities' && stravaToken && stravaActivities.length === 0) {
     loadStravaActivities();
-  }
-  if (tab === 'profil') {
+  } else if (tab === 'profil') {
     loadProfileFields();
-  }
-  if (tab === 'plan') {
+  } else if (tab === 'plan') {
     renderCalendar();
+  } else if (tab === 'wellness') {
+    requestAnimationFrame(() => initWellness());
+  } else if (tab === 'progress') {
+    requestAnimationFrame(() => initProgress());
   }
-  if (tab === 'wellness') {
-    initWellness();
-  }
-  if (tab === 'progress') {
-    initProgress();
-  }
-  document.getElementById('progressPanel').style.display = tab === 'progress' ? 'flex' : 'none';
 }
 
 // ─── PROFIL EDITOR ───
@@ -3470,7 +3489,7 @@ async function openActDetail(act) {
     // HR Chart (use laps for HR data points)
     if (laps && laps.length && laps.some(l => l.average_heartrate)) {
       document.getElementById('adHRSection').style.display = 'block';
-      renderActivityHRChart(laps, detail);
+      requestAnimationFrame(() => renderActivityHRChart(laps, detail));
     }
 
     // Laps table
@@ -4069,11 +4088,15 @@ function setProgressRange(days) {
 
 function initProgress() {
   if (!stravaActivities.length) {
-    document.getElementById('progressStats').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
+    const el = document.getElementById('progressStats');
+    if (el) el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
-  setProgressRange(90);
   renderPRList();
-  setTimeout(() => renderPRChart(), 100);
+  // rAF ensures panel visible + Chart.js loaded before rendering
+  requestAnimationFrame(() => {
+    setProgressRange(progressDays || 90);
+    requestAnimationFrame(() => renderPRChart());
+  });
 }
 
 let prChartInst = null;
