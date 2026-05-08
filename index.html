@@ -890,7 +890,7 @@
     </div>
 
     <!-- Activities Panel -->
-    <div class="activities-panel" id="activitiesPanel">
+    <div class="activities-panel" id="activitiesPanel" style="display:none;">
       <div class="connect-prompt" id="connectPrompt">
         <h3>Strava verbinden</h3>
         <p>Gib deinen Strava Access Token in der Seitenleiste ein, um deine letzten Aktivitäten zu laden und analysieren zu lassen.</p>
@@ -902,7 +902,7 @@
     </div>
 
     <!-- Plan Panel -->
-    <div class="activities-panel" id="planPanel" style="flex-direction: column; padding: 0;">
+    <div class="activities-panel" id="planPanel" style="flex-direction:column;padding:0;display:none;">
       <div style="display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0;">
         <button id="btnPrevKw" onclick="changeKw(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;">←</button>
         <div style="flex:1; text-align:center;">
@@ -984,7 +984,7 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      <div style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;overscroll-behavior:contain;">
+      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;">
 
         <!-- CTL/ATL/TSB Chart -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
@@ -1236,7 +1236,7 @@
     </div>
 
     <!-- Profil Panel -->
-    <div class="activities-panel" id="profilPanel">
+    <div class="activities-panel" id="profilPanel" style="display:none;">
       <div style="padding: 4px 0 20px; max-width: 680px;">
 
         <div style="margin-bottom: 20px;">
@@ -2654,7 +2654,11 @@ function switchTab(tab, el) {
   // Show only active panel
   const panelMap = { chat:'chatPanel', activities:'activitiesPanel', plan:'planPanel', profil:'profilPanel', wellness:'wellnessPanel', progress:'progressPanel' };
   const activePanel = document.getElementById(panelMap[tab]);
-  if (activePanel) activePanel.style.display = 'flex';
+  if (activePanel) {
+    // planPanel needs flex for its column layout
+    activePanel.style.display = 'flex';
+    activePanel.style.flexDirection = ['plan','wellness','progress'].includes(tab) ? 'column' : '';
+  }
 
   if (tab === 'activities' && stravaToken && stravaActivities.length === 0) {
     loadStravaActivities();
@@ -3467,7 +3471,13 @@ async function openActDetail(act) {
     // HR Chart (use laps for HR data points)
     if (laps && laps.length && laps.some(l => l.average_heartrate)) {
       document.getElementById('adHRSection').style.display = 'block';
-      renderActivityHRChart(laps, detail);
+      if (typeof Chart !== 'undefined') {
+        renderActivityHRChart(laps, detail);
+      } else {
+        const _w = setInterval(() => {
+          if (typeof Chart !== 'undefined') { clearInterval(_w); renderActivityHRChart(laps, detail); }
+        }, 100);
+      }
     }
 
     // Laps table
@@ -4068,29 +4078,17 @@ function initProgress() {
   if (!stravaActivities.length) {
     document.getElementById('progressStats').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
-  // Ensure Chart.js is loaded
-  if (typeof Chart === 'undefined') {
-    const _progWait = setInterval(() => {
-      if (typeof Chart !== 'undefined') {
-        clearInterval(_progWait);
-        setProgressRange(progressDays || 90);
-      }
-    }, 200);
-  } else {
-    setProgressRange(90);
-  }
   renderPRList();
-  if (typeof Chart !== 'undefined') {
-    setTimeout(() => renderPRChart(), 100);
-  } else {
-    // Wait for Chart.js to load
-    const _prWait = setInterval(() => {
-      if (typeof Chart !== 'undefined') {
-        clearInterval(_prWait);
-        renderPRChart();
-      }
-    }, 200);
-  }
+  // Wait for Chart.js then render all charts
+  const _waitChart = setInterval(() => {
+    if (typeof Chart !== 'undefined') {
+      clearInterval(_waitChart);
+      setProgressRange(progressDays || 90);
+      setTimeout(() => renderPRChart(), 150);
+    }
+  }, 100);
+  // Timeout fallback
+  setTimeout(() => clearInterval(_waitChart), 5000);
 }
 
 let prChartInst = null;
