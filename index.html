@@ -133,19 +133,13 @@
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
     /* Progress tab mobile */
-    #progressPanel { display: flex !important; flex-direction: column !important; overflow: hidden !important; }
-    #progressPanel canvas { max-height: 120px !important; }
+    #progressPanel { overflow: hidden !important; }
+    #progressPanel > div:last-child { overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
+    #progressPanel canvas { height: 120px !important; }
     #progressStats { gap: 6px !important; }
     #progressStats > div { padding: 6px 8px !important; }
-    /* Progress + Wellness scroll fix on mobile */
-    #progressPanel > div:nth-child(3),
-    #wellnessPanel > div:last-child {
-      flex: 1 !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      min-height: 0 !important;
-    }
-    #prList { overflow-y: auto; }
+    #prList div { font-size: 12px !important; }
+    #prChart { height: 150px !important; }
   }
 
   /* ─── SIDEBAR ─── */
@@ -899,7 +893,7 @@
     </div>
 
     <!-- Activities Panel -->
-    <div class="activities-panel" id="activitiesPanel" style="display:none;">
+    <div class="activities-panel" id="activitiesPanel">
       <div class="connect-prompt" id="connectPrompt">
         <h3>Strava verbinden</h3>
         <p>Gib deinen Strava Access Token in der Seitenleiste ein, um deine letzten Aktivitäten zu laden und analysieren zu lassen.</p>
@@ -911,7 +905,7 @@
     </div>
 
     <!-- Plan Panel -->
-    <div class="activities-panel" id="planPanel" style="flex-direction:column;padding:0;display:none;">
+    <div class="activities-panel" id="planPanel" style="flex-direction: column; padding: 0;">
       <div style="display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0;">
         <button id="btnPrevKw" onclick="changeKw(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;">←</button>
         <div style="flex:1; text-align:center;">
@@ -928,7 +922,7 @@
     </div>
 
     <!-- Wellness Panel -->
-    <div class="activities-panel" id="wellnessPanel" style="flex-direction:column;padding:0;display:none;height:100%;overflow:hidden;">
+    <div class="activities-panel" id="wellnessPanel" style="flex-direction:column;padding:0;display:none;">
 
       <!-- Input strip -->
       <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
@@ -1042,7 +1036,7 @@
               <option value="70.3_total">70.3 Gesamt</option>
             </select>
           </div>
-          <div style="padding:14px;position:relative;height:200px;">
+          <div style="padding:14px;position:relative;height:180px;">
             <canvas id="prChart"></canvas>
             <div id="prChartEmpty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Keine Daten für diese Kategorie</div>
           </div>
@@ -1245,7 +1239,7 @@
     </div>
 
     <!-- Profil Panel -->
-    <div class="activities-panel" id="profilPanel" style="display:none;">
+    <div class="activities-panel" id="profilPanel">
       <div style="padding: 4px 0 20px; max-width: 680px;">
 
         <div style="margin-bottom: 20px;">
@@ -2655,32 +2649,28 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab')[['chat','activities','plan','profil','wellness','progress'].indexOf(tab)].classList.add('active');
 
-  // Hide all panels
-  ['chatPanel','activitiesPanel','planPanel','profilPanel','wellnessPanel','progressPanel'].forEach(id => {
-    const panel = document.getElementById(id);
-    if (panel) panel.style.display = 'none';
-  });
+  document.getElementById('chatPanel').style.display = tab === 'chat' ? 'flex' : 'none';
+  document.getElementById('activitiesPanel').style.display = tab === 'activities' ? 'flex' : 'none';
+  document.getElementById('planPanel').style.display = tab === 'plan' ? 'flex' : 'none';
+  document.getElementById('profilPanel').style.display = tab === 'profil' ? 'flex' : 'none';
+  document.getElementById('wellnessPanel').style.display = tab === 'wellness' ? 'flex' : 'none';
 
-  // Show active panel — column layout for multi-section tabs
-  const panelMap = { chat:'chatPanel', activities:'activitiesPanel', plan:'planPanel', profil:'profilPanel', wellness:'wellnessPanel', progress:'progressPanel' };
-  const activePanel = document.getElementById(panelMap[tab]);
-  if (activePanel) {
-    activePanel.style.display = 'flex';
-    activePanel.style.flexDirection = ['plan','wellness','progress'].includes(tab) ? 'column' : '';
-  }
-
-  // Tab-specific init — use requestAnimationFrame so browser paints panel BEFORE charts render
   if (tab === 'activities' && stravaToken && stravaActivities.length === 0) {
     loadStravaActivities();
-  } else if (tab === 'profil') {
-    loadProfileFields();
-  } else if (tab === 'plan') {
-    renderCalendar();
-  } else if (tab === 'wellness') {
-    requestAnimationFrame(() => initWellness());
-  } else if (tab === 'progress') {
-    requestAnimationFrame(() => initProgress());
   }
+  if (tab === 'profil') {
+    loadProfileFields();
+  }
+  if (tab === 'plan') {
+    renderCalendar();
+  }
+  if (tab === 'wellness') {
+    initWellness();
+  }
+  if (tab === 'progress') {
+    initProgress();
+  }
+  document.getElementById('progressPanel').style.display = tab === 'progress' ? 'flex' : 'none';
 }
 
 // ─── PROFIL EDITOR ───
@@ -3440,6 +3430,9 @@ async function openActDetail(act) {
     const laps   = await lapsRes.json();
 
     document.getElementById('adLoading').style.display = 'none';
+    // Force layout update
+    document.getElementById('adHRSection').style.display = 'none';
+    document.getElementById('adLapsSection').style.display = 'none';
 
     // PR / Achievement badges
     const badges = document.getElementById('adPRBadge');
@@ -3474,19 +3467,10 @@ async function openActDetail(act) {
       badges.innerHTML = `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${detail.pr_count} PR${detail.pr_count>1?'s':''}</div>`;
     }
 
-    // HR Chart
+    // HR Chart (use laps for HR data points)
     if (laps && laps.length && laps.some(l => l.average_heartrate)) {
       document.getElementById('adHRSection').style.display = 'block';
-      requestAnimationFrame(() => {
-        if (typeof Chart !== 'undefined') {
-          renderActivityHRChart(laps, detail);
-        } else {
-          const s = document.createElement('script');
-          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-          s.onload = () => renderActivityHRChart(laps, detail);
-          document.head.appendChild(s);
-        }
-      });
+      renderActivityHRChart(laps, detail);
     }
 
     // Laps table
@@ -3964,60 +3948,34 @@ function renderPRList() {
   const prs = getPRs();
   const container = document.getElementById('prList');
   if (!prs.length) {
-    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Noch keine PRs eingetragen — klick "+ PR eintragen"</div>';
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Noch keine PRs eingetragen</div>';
     return;
   }
+  // Group by category
   const grouped = {};
-  prs.forEach((pr, origIdx) => {
+  prs.forEach((pr, idx) => {
     if (!grouped[pr.cat]) grouped[pr.cat] = [];
-    grouped[pr.cat].push({ ...pr, origIdx });
+    grouped[pr.cat].push({ ...pr, idx });
   });
   let html = '';
   Object.entries(grouped).forEach(([cat, entries]) => {
-    const catInfo = PR_CATEGORIES[cat] || { label: cat };
-    const actual = entries.filter(e => !e.isGoal);
-    const goals  = entries.filter(e => e.isGoal);
-    const best   = actual[actual.length - 1] || entries[entries.length - 1];
-    const bestDisplay = best.pace && best.time ? best.pace + '/km · ' + best.time : best.value;
-    html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border);">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px;">';
-    html += '<span style="font-size:13px;font-weight:600;">' + catInfo.label + '</span>';
-    html += '<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);">▲ ' + bestDisplay + '</span>';
-    html += '</div>';
-    if (actual.length) {
-      html += '<div style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Einträge</div>';
-      html += '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;">';
-      actual.forEach(e => {
-        const display = e.pace && e.time
-          ? '<span style="color:var(--accent);">' + e.pace + '/km</span> · ' + e.time
-          : e.value;
-        const note = e.note ? ' · <span style="color:var(--muted2);font-size:10px;">' + e.note + '</span>' : '';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;">';
-        html += '<span style="color:var(--muted);min-width:40px;">' + e.date.slice(5) + '</span>';
-        html += '<span style="flex:1;margin:0 8px;">' + display + note + '</span>';
-        html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
-        html += '<button onclick="openPRModal(' + e.origIdx + ')" style="background:rgba(232,255,71,0.12);border:1px solid rgba(232,255,71,0.25);color:var(--accent);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✎</button>';
-        html += '<button onclick="deletePR(' + e.origIdx + ')" style="background:rgba(255,85,85,0.12);border:1px solid rgba(255,85,85,0.25);color:var(--red);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✕</button>';
-        html += '</div></div>';
-      });
-      html += '</div>';
-    }
-    if (goals.length) {
-      html += '<div style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Ziele</div>';
-      html += '<div style="display:flex;flex-direction:column;gap:4px;">';
-      goals.forEach(e => {
-        const display = e.pace && e.time ? e.pace + '/km · ' + e.time : e.value;
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(232,255,71,0.04);border:1px solid rgba(232,255,71,0.15);border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;">';
-        html += '<span style="color:var(--muted);min-width:40px;">' + e.date.slice(5) + '</span>';
-        html += '<span style="flex:1;margin:0 8px;color:var(--accent);">🎯 ' + display + '</span>';
-        html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
-        html += '<button onclick="openPRModal(' + e.origIdx + ')" style="background:rgba(232,255,71,0.12);border:1px solid rgba(232,255,71,0.25);color:var(--accent);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✎</button>';
-        html += '<button onclick="deletePR(' + e.origIdx + ')" style="background:rgba(255,85,85,0.12);border:1px solid rgba(255,85,85,0.25);color:var(--red);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">✕</button>';
-        html += '</div></div>';
-      });
-      html += '</div>';
-    }
-    html += '</div>';
+    const catInfo = PR_CATEGORIES[cat] || { label: cat, unit: '' };
+    const best = entries[entries.length - 1];
+    html += `<div style="padding:10px 14px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
+        <span style="font-size:13px;font-weight:500;">${catInfo.label}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);">▲ ${best.value} ${catInfo.unit}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${entries.map(e => `
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;font-size:11px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:5px;flex-shrink:0;">
+            <span style="color:var(--muted);">${e.date.slice(5)}</span>
+            <span style="color:var(--text);">${e.value}</span>
+            ${e.note ? `<span style="color:var(--muted2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">· ${e.note}</span>` : ''}
+            <button onclick="deletePR(${e.idx})" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:10px;padding:0;line-height:1;">✕</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
   });
   container.innerHTML = html;
 }
@@ -4111,13 +4069,11 @@ function setProgressRange(days) {
 
 function initProgress() {
   if (!stravaActivities.length) {
-    const el = document.getElementById('progressStats');
-    if (el) el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
+    document.getElementById('progressStats').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Strava verbinden für automatische Auswertung</div>';
   }
+  setProgressRange(90);
   renderPRList();
-  // Charts need Chart.js AND visible canvas - renderProgress/renderPRChart handle this internally
-  setProgressRange(progressDays || 90);
-  renderPRChart();
+  setTimeout(() => renderPRChart(), 100);
 }
 
 let prChartInst = null;
