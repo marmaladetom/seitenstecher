@@ -47,18 +47,7 @@
     display: flex;
     flex-direction: column;
   }
-  /* Fill iPhone home indicator area with surface color */
-  body::after {
-    content: '';
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-bottom, 0px);
-    background: var(--surface);
-    z-index: 999;
-    pointer-events: none;
-  }
+
 
   /* ─── HEADER ─── */
   header {
@@ -141,7 +130,7 @@
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area { padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .input-area { padding: 10px 12px calc(20px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 100px 0 100px var(--surface); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
     /* Progress tab mobile */
@@ -509,15 +498,14 @@
   /* Input area */
   .input-area {
     padding: 12px 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
     position: sticky;
     bottom: 0;
-    /* Extend background color into iPhone home indicator area */
-    background-clip: padding-box;
-    margin-bottom: 0;
+    /* Fill safe area below with same color using box-shadow trick */
+    box-shadow: 0 100px 0 100px var(--surface);
   }
   .input-row {
     display: flex;
@@ -2998,31 +2986,48 @@ async function loadStravaActivities() {
   list.innerHTML = '<div class="loading-acts">Lade Aktivitäten...</div>';
 
   try {
-    // Load up to 100 recent activities
     // Load up to 500 activities (5 pages of 100)
     let fresh = [];
+    let apiOk = false;
     for (let page = 1; page <= 5; page++) {
-      const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`, {
-        headers: { 'Authorization': `Bearer ${stravaToken}` }
-      });
-      if (!res.ok) break;
-      const batch = await res.json();
-      if (!batch.length) break;
-      fresh = fresh.concat(batch);
-      if (batch.length < 100) break;
+      try {
+        const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`, {
+          headers: { 'Authorization': `Bearer ${stravaToken}` }
+        });
+        if (!res.ok) break;
+        const batch = await res.json();
+        if (!batch.length) break;
+        fresh = fresh.concat(batch);
+        apiOk = true;
+        if (batch.length < 100) break;
+      } catch(e) { break; }
     }
-    stravaActivities = mergeStravaCache(fresh);
+    if (apiOk && fresh.length) {
+      stravaActivities = mergeStravaCache(fresh);
+    } else {
+      // PWA/CORS fallback: try Supabase cache first, then localStorage
+      const rows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
+      if (rows[0] && rows[0].activities && rows[0].activities.length) {
+        stravaActivities = rows[0].activities;
+        localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities));
+      } else {
+        stravaActivities = stravaCache();
+      }
+      if (stravaActivities.length) {
+        list.innerHTML = `<div class="loading-acts" style="color:var(--amber);font-size:12px;">⚠️ Offline — ${stravaActivities.length} gecachte Aktivitäten</div>`;
+      }
+    }
     renderActivities();
     updateStravaBadge(true);
   } catch (err) {
-    // Fall back to cache on error
+    // Last resort: localStorage cache
     const cached = stravaCache();
     if (cached.length) {
       stravaActivities = cached;
       renderActivities();
       list.innerHTML = `<div class="loading-acts" style="color:var(--amber);font-size:12px;">⚠️ Offline — zeige ${cached.length} gecachte Aktivitäten</div>` + list.innerHTML;
     } else {
-      list.innerHTML = `<div class="loading-acts" style="color:var(--red);">Fehler: ${err.message}<br><br>Token prüfen auf <a href="https://www.strava.com/settings/api" target="_blank" style="color:var(--accent);">strava.com/settings/api</a></div>`;
+      list.innerHTML = `<div class="loading-acts" style="color:var(--red);">Fehler: ${err.message}</div>`;
       updateStravaBadge(false);
     }
   }
@@ -4287,11 +4292,11 @@ function renderProgress() {
   });
 }
 
-// Load Chart.js dynamically
+// Load Chart.js immediately at startup (not lazy)
 if (!window.Chart) {
   const s = document.createElement('script');
   s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-  s.onload = () => { if (document.getElementById('wellnessPanel').style.display !== 'none') renderWellness(); };
+  s.async = true;
   document.head.appendChild(s);
 }
 
