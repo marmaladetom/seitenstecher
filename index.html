@@ -137,6 +137,15 @@
     #progressPanel canvas { max-height: 120px !important; }
     #progressStats { gap: 6px !important; }
     #progressStats > div { padding: 6px 8px !important; }
+    /* Progress + Wellness scroll fix on mobile */
+    #progressPanel > div:nth-child(3),
+    #wellnessPanel > div:last-child {
+      flex: 1 !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      min-height: 0 !important;
+    }
+    #prList { overflow-y: auto; }
   }
 
   /* ─── SIDEBAR ─── */
@@ -919,7 +928,7 @@
     </div>
 
     <!-- Wellness Panel -->
-    <div class="activities-panel" id="wellnessPanel" style="flex-direction:column;padding:0;display:none;">
+    <div class="activities-panel" id="wellnessPanel" style="flex-direction:column;padding:0;display:none;height:100%;overflow:hidden;">
 
       <!-- Input strip -->
       <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
@@ -972,7 +981,7 @@
     </div>
 
     <!-- Progress Panel -->
-    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;">
+    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;height:100%;overflow:hidden;">
 
       <!-- Time range selector -->
       <div style="display:flex;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);">
@@ -1033,7 +1042,7 @@
               <option value="70.3_total">70.3 Gesamt</option>
             </select>
           </div>
-          <div style="padding:14px;position:relative;height:200px;min-height:200px;">
+          <div style="padding:14px;position:relative;height:200px;">
             <canvas id="prChart"></canvas>
             <div id="prChartEmpty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Keine Daten für diese Kategorie</div>
           </div>
@@ -2646,34 +2655,31 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab')[['chat','activities','plan','profil','wellness','progress'].indexOf(tab)].classList.add('active');
 
-  // Hide ALL panels first
+  // Hide all panels
   ['chatPanel','activitiesPanel','planPanel','profilPanel','wellnessPanel','progressPanel'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
+    const panel = document.getElementById(id);
+    if (panel) panel.style.display = 'none';
   });
-  // Show only active panel
+
+  // Show active panel — column layout for multi-section tabs
   const panelMap = { chat:'chatPanel', activities:'activitiesPanel', plan:'planPanel', profil:'profilPanel', wellness:'wellnessPanel', progress:'progressPanel' };
   const activePanel = document.getElementById(panelMap[tab]);
   if (activePanel) {
-    // planPanel needs flex for its column layout
     activePanel.style.display = 'flex';
     activePanel.style.flexDirection = ['plan','wellness','progress'].includes(tab) ? 'column' : '';
   }
 
+  // Tab-specific init — use requestAnimationFrame so browser paints panel BEFORE charts render
   if (tab === 'activities' && stravaToken && stravaActivities.length === 0) {
     loadStravaActivities();
-  }
-  if (tab === 'profil') {
+  } else if (tab === 'profil') {
     loadProfileFields();
-  }
-  if (tab === 'plan') {
+  } else if (tab === 'plan') {
     renderCalendar();
-  }
-  if (tab === 'wellness') {
-    initWellness();
-  }
-  if (tab === 'progress') {
-    initProgress();
+  } else if (tab === 'wellness') {
+    requestAnimationFrame(() => initWellness());
+  } else if (tab === 'progress') {
+    requestAnimationFrame(() => initProgress());
   }
 }
 
@@ -3468,16 +3474,19 @@ async function openActDetail(act) {
       badges.innerHTML = `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${detail.pr_count} PR${detail.pr_count>1?'s':''}</div>`;
     }
 
-    // HR Chart (use laps for HR data points)
+    // HR Chart
     if (laps && laps.length && laps.some(l => l.average_heartrate)) {
       document.getElementById('adHRSection').style.display = 'block';
-      if (typeof Chart !== 'undefined') {
-        renderActivityHRChart(laps, detail);
-      } else {
-        const _w = setInterval(() => {
-          if (typeof Chart !== 'undefined') { clearInterval(_w); renderActivityHRChart(laps, detail); }
-        }, 100);
-      }
+      requestAnimationFrame(() => {
+        if (typeof Chart !== 'undefined') {
+          renderActivityHRChart(laps, detail);
+        } else {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+          s.onload = () => renderActivityHRChart(laps, detail);
+          document.head.appendChild(s);
+        }
+      });
     }
 
     // Laps table
@@ -3493,11 +3502,6 @@ async function openActDetail(act) {
 
 function renderActivityHRChart(laps, detail) {
   if (typeof Chart === 'undefined') return;
-  const canvas = document.getElementById('adHRChart');
-  if (!canvas || canvas.offsetWidth === 0) {
-    setTimeout(() => renderActivityHRChart(laps, detail), 200);
-    return;
-  }
   const labels = laps.map((l, i) => 'L' + (i+1));
   const hrData = laps.map(l => l.average_heartrate ? Math.round(l.average_heartrate) : null);
 
@@ -4120,13 +4124,6 @@ let prChartInst = null;
 
 function renderPRChart() {
   if (typeof Chart === 'undefined') return;
-  // Ensure canvas has dimensions (panel must be visible)
-  const canvas = document.getElementById('prChart');
-  if (!canvas || canvas.offsetWidth === 0) {
-    // Panel not visible yet - retry after a short delay
-    setTimeout(renderPRChart, 200);
-    return;
-  }
   const cat = document.getElementById('prChartCat')?.value || '10k';
   const catInfo = PR_CATEGORIES[cat];
   const prs = getPRs().filter(p => p.cat === cat && !p.isGoal);
@@ -4209,12 +4206,6 @@ function renderPRChart() {
 }
 
 function renderProgress() {
-  // Ensure canvas has dimensions
-  const ctlCanvas = document.getElementById('ctlChart');
-  if (!ctlCanvas || ctlCanvas.offsetWidth === 0) {
-    setTimeout(renderProgress, 200);
-    return;
-  }
   const days = progressDays === 0
     ? Math.max(90, Math.ceil((new Date() - new Date(stravaActivities[stravaActivities.length-1]?.start_date || new Date())) / 86400000) + 30)
     : progressDays;
