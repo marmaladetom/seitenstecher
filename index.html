@@ -983,7 +983,7 @@
     </div>
 
     <!-- Progress Panel -->
-    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;overflow-y:auto;">
+    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;">
 
       <!-- Time range selector -->
       <div style="display:flex;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);">
@@ -995,7 +995,7 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      <div id="progressScroll" style="flex:1;min-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
+      
 
         <!-- CTL/ATL/TSB Chart -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
@@ -1050,7 +1050,7 @@
           </div>
         </div>
 
-      </div>
+      
     </div>
 
     <!-- PR Input Modal -->
@@ -1493,7 +1493,6 @@ const db = {
       wellness.forEach(r => localStorage.setItem('sc_wellness_'+r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date })));
       if (chat[0] && chat[0].messages && chat[0].messages.length) localStorage.setItem('sc_chat_history', JSON.stringify(chat[0].messages));
       if (stravaRows[0]) {
-        if (stravaRows[0].activities && stravaRows[0].activities.length) { stravaActivities = stravaRows[0].activities; localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities)); }
         if (stravaRows[0].access_token && !stravaToken) {
           stravaToken = stravaRows[0].access_token;
           localStorage.setItem('sc_access_token', stravaRows[0].access_token);
@@ -1503,8 +1502,9 @@ const db = {
         if (stravaRows[0].anthropic_key) {
           localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key);
         }
-        if (stravaRows[0].anthropic_key && !localStorage.getItem('sc_anthropic_key')) { localStorage.setItem('sc_anthropic_key', stravaRows[0].anthropic_key); document.getElementById('apiKeySetup').style.display = 'none'; document.getElementById('apiKeyConnected').style.display = 'block'; }
       }
+      // Load activities from sc_activities table
+      await loadActivitiesFromSupabase();
       // UI updated by caller via updateUIFromStorage()
       // Load PRs from Supabase - cloud is authoritative
       const prRows = await sbGet('sc_prs_data', { user_id: `eq.${SB_USER}` });
@@ -2936,12 +2936,13 @@ function init_real() {
     buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
     renderCalendar();
-    // Auto-refresh Strava in background on every app start
-    if (stravaToken) {
+    // Auto-refresh Strava AFTER sync so token is guaranteed loaded from Supabase
+    const token = localStorage.getItem('sc_access_token');
+    if (token) {
+      stravaToken = token;
       loadStravaActivities().then(() => {
-        // Update calendar with fresh Strava matches
         if (currentTab === 'activities') renderActivities();
-        else renderCalendar();
+        renderCalendar();
       });
     }
   });
@@ -2989,71 +2990,87 @@ function mergeStravaCache(fresh) {
 }
 
 async function loadStravaActivities() {
-  if (!stravaToken) {
-    // Try Supabase cache first, then localStorage
-    const rows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
-    if (rows[0] && rows[0].activities && rows[0].activities.length) {
-      stravaActivities = rows[0].activities;
-      localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities));
-    } else {
-      stravaActivities = stravaCache();
-    }
-    if (stravaActivities.length) { renderActivities(); updateStravaBadge(true); }
-    return;
-  }
-
   const prompt = document.getElementById('connectPrompt');
   const list = document.getElementById('activityList');
-  prompt.style.display = 'none';
-  list.style.display = 'flex';
-  list.innerHTML = '<div class="loading-acts">Lade Aktivitäten...</div>';
+  if (prompt) prompt.style.display = 'none';
+  if (list) { list.style.display = 'flex'; list.innerHTML = '<div class="loading-acts">Lade Aktivitäten...</div>'; }
+
+  // Always load from Supabase first (fast, works on PWA)
+  await loadActivitiesFromSupabase();
+
+  // Then sync new ones from Strava API in background
+  const token = localStorage.getItem('sc_access_token');
+  if (!token) return;
+  stravaToken = token;
 
   try {
-    // Load up to 500 activities (5 pages of 100)
+    // Find most recent activity we have
+    const existing = await sbGet('sc_activities', { user_id: `eq.${SB_USER}`, order: 'activity_date.desc', limit: '1' });
+    const afterTs = existing[0] ? Math.floor(new Date(existing[0].activity_date).getTime() / 1000) : 0;
+
+    // Fetch new activities only (or all 500 on first run)
     let fresh = [];
-    let apiOk = false;
-    for (let page = 1; page <= 5; page++) {
+    const maxPages = afterTs ? 1 : 5;
+    for (let page = 1; page <= maxPages; page++) {
       try {
-        const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`, {
-          headers: { 'Authorization': `Bearer ${stravaToken}` }
-        });
+        let url = `https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`;
+        if (afterTs) url += `&after=${afterTs}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) break;
         const batch = await res.json();
-        if (!batch.length) break;
+        if (!Array.isArray(batch) || !batch.length) break;
         fresh = fresh.concat(batch);
-        apiOk = true;
         if (batch.length < 100) break;
       } catch(e) { break; }
     }
-    if (apiOk && fresh.length) {
-      stravaActivities = mergeStravaCache(fresh);
-    } else {
-      // PWA/CORS fallback: try Supabase cache first, then localStorage
-      const rows = await sbGet('sc_strava', { user_id: `eq.${SB_USER}` });
-      if (rows[0] && rows[0].activities && rows[0].activities.length) {
-        stravaActivities = rows[0].activities;
-        localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities));
-      } else {
-        stravaActivities = stravaCache();
-      }
-      if (stravaActivities.length) {
-        list.innerHTML = `<div class="loading-acts" style="color:var(--amber);font-size:12px;">⚠️ Offline — ${stravaActivities.length} gecachte Aktivitäten</div>`;
-      }
+
+    if (fresh.length) {
+      await saveActivitiesToSupabase(fresh);
+      await loadActivitiesFromSupabase();
     }
-    renderActivities();
     updateStravaBadge(true);
-  } catch (err) {
-    // Last resort: localStorage cache
-    const cached = stravaCache();
-    if (cached.length) {
-      stravaActivities = cached;
-      renderActivities();
-      list.innerHTML = `<div class="loading-acts" style="color:var(--amber);font-size:12px;">⚠️ Offline — zeige ${cached.length} gecachte Aktivitäten</div>` + list.innerHTML;
-    } else {
-      list.innerHTML = `<div class="loading-acts" style="color:var(--red);">Fehler: ${err.message}</div>`;
-      updateStravaBadge(false);
-    }
+  } catch(err) {
+    console.log('Strava sync error:', err);
   }
+}
+
+async function saveActivitiesToSupabase(activities) {
+  for (let i = 0; i < activities.length; i += 50) {
+    const batch = activities.slice(i, i + 50).map(a => ({
+      id: a.id,
+      user_id: SB_USER,
+      data: a,
+      activity_date: (a.start_date_local || a.start_date).slice(0, 10),
+      updated_at: new Date().toISOString()
+    }));
+    try {
+      await fetch(`${SB_URL}/rest/v1/sc_activities`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify(batch)
+      });
+    } catch(e) { console.log('Save batch error:', e); }
+  }
+}
+
+async function loadActivitiesFromSupabase() {
+  try {
+    const rows = await sbGet('sc_activities', {
+      user_id: `eq.${SB_USER}`,
+      order: 'activity_date.desc',
+      limit: '500'
+    });
+    if (rows.length) {
+      stravaActivities = rows.map(r => r.data);
+      localStorage.setItem('sc_strava_cache', JSON.stringify(stravaActivities));
+      renderActivities();
+      updateStravaBadge(true);
+    }
+  } catch(e) { console.log('Load from Supabase error:', e); }
 }
 
 function renderActivities() {
