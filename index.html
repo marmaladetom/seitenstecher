@@ -901,7 +901,7 @@
     </div>
 
     <!-- Activities Panel -->
-    <div class="activities-panel" id="activitiesPanel" style="display:none;">
+    <div class="activities-panel" id="activitiesPanel">
       <div class="connect-prompt" id="connectPrompt">
         <h3>Strava verbinden</h3>
         <p>Gib deinen Strava Access Token in der Seitenleiste ein, um deine letzten Aktivitäten zu laden und analysieren zu lassen.</p>
@@ -913,7 +913,7 @@
     </div>
 
     <!-- Plan Panel -->
-    <div class="activities-panel" id="planPanel" style="flex-direction:column;padding:0;display:none;">
+    <div class="activities-panel" id="planPanel" style="flex-direction: column; padding: 0;">
       <div style="display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0;">
         <button id="btnPrevKw" onclick="changeKw(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;">←</button>
         <div style="flex:1; text-align:center;">
@@ -1247,7 +1247,7 @@
     </div>
 
     <!-- Profil Panel -->
-    <div class="activities-panel" id="profilPanel" style="display:none;">
+    <div class="activities-panel" id="profilPanel">
       <div style="padding: 4px 0 20px; max-width: 680px;">
 
         <div style="margin-bottom: 20px;">
@@ -1953,7 +1953,7 @@ REGELN:
 - Antwort auf Deutsch, präzise
 
 PLAN-ÄNDERUNGEN: Wenn Tom eine Einheit ändern möchte, antworte normal UND füge am Ende einen Block ein:
-<planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}<\/planchange>
+<planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}</planchange>
 Verwende exakt dieses Format. kw=Kalenderwoche (Zahl), day=Mo/Di/Mi/Do/Fr/Sa/So, type=run/bike/swim/gym/rest/race/brick. Nur einfügen wenn Tom explizit eine Änderung wünscht.`;
 
 function SYSTEM_PROMPT() {
@@ -1998,23 +1998,14 @@ function updateHRVSidebar() {
 }
 
 function updateUIFromStorage() {
-  // Update Strava UI - read from localStorage as stravaToken var may not be set yet
-  const _token = localStorage.getItem('sc_access_token');
-  if (_token) {
-    stravaToken = _token; // ensure variable is set
+  // Update Strava UI
+  if (stravaToken) {
     const sd = document.getElementById('stravaDisconnected');
     if (sd) sd.style.display = 'none';
     const tc = document.getElementById('tokenConnected');
     if (tc) tc.style.display = 'block';
     updateStravaBadge(true);
     if (stravaActivities.length === 0) loadStravaActivities();
-  } else {
-    stravaToken = '';
-    const sd = document.getElementById('stravaDisconnected');
-    if (sd) sd.style.display = 'block';
-    const tc = document.getElementById('tokenConnected');
-    if (tc) tc.style.display = 'none';
-    updateStravaBadge(false);
   }
   // Update Anthropic key UI
   if (localStorage.getItem('sc_anthropic_key')) {
@@ -2075,7 +2066,7 @@ function updateDateBadge() {
 function updateStravaBadge(connected) {
   const b = document.getElementById('stravaBadge');
   b.className = 'badge ' + (connected ? 'connected' : 'disconnected');
-  b.innerHTML = `<div class="dot"><\/div> Strava`;
+  b.innerHTML = `<div class="dot"></div> Strava`;
 }
 
 // ─── TODAY CARD ───
@@ -2132,7 +2123,7 @@ function buildWeekNav() {
     const entry = weekEntries ? weekEntries[dayKeys[i]] : null;
     const pill = document.createElement('div');
     pill.className = `day-pill ${entry ? 'has-workout' : ''} ${i === todayDow ? 'today' : ''}`;
-    pill.innerHTML = `<span class="day-letter">${labels[i]}<\/span>${entry && entry.type !== 'rest' ? '<div class="day-dot"><\/div>' : ''}`;
+    pill.innerHTML = `<span class="day-letter">${labels[i]}</span>${entry && entry.type !== 'rest' ? '<div class="day-dot"></div>' : ''}`;
     pill.title = entry ? entry.label : 'Ruhe';
     pill.onclick = () => { switchTab('plan', null); goToCurrentKw(); };
     nav.appendChild(pill);
@@ -2154,10 +2145,10 @@ function buildRaceCountdown() {
     const opacity = race.done ? 'opacity:0.45;' : '';
     item.innerHTML = `
       <div style="${opacity}">
-        <div class="race-name" style="color:${race.color}">${race.name}<\/div>
-        <div class="race-date">${race.date.split('-').reverse().join('.')} · ${race.goal}<\/div>
-      <\/div>
-      <div class="race-days" style="${race.done?'color:var(--muted);':''}">${diffText}<\/div>
+        <div class="race-name" style="color:${race.color}">${race.name}</div>
+        <div class="race-date">${race.date.split('-').reverse().join('.')} · ${race.goal}</div>
+      </div>
+      <div class="race-days" style="${race.done?'color:var(--muted);':''}">${diffText}</div>
     `;
     if (!race.done) item.onclick = () => quickPrompt(`Gib mir Tipps und Strategie für ${race.name} (${race.goal})`);
     list.appendChild(item);
@@ -2234,9 +2225,9 @@ function renderCalendar() {
   document.getElementById('kwStats').innerHTML = [
     {label:'Laufvolumen',val:week.laufVol},
     {label:'Zeitraum',val:weekStart.toLocaleDateString('de',{day:'2-digit',month:'2-digit'}) + ' – ' + new Date(new Date(week.dateFrom).setDate(weekStart.getDate()+6)).toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}
-  ].map(s=>`<div style="background:var(--surface2);border-radius:8px;padding:6px 14px;"><div style="font-size:11px;color:var(--muted);">${s.label}<\/div><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:500;">${s.val}<\/div><\/div>`).join('');
+  ].map(s=>`<div style="background:var(--surface2);border-radius:8px;padding:6px 14px;"><div style="font-size:11px;color:var(--muted);">${s.label}</div><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:500;">${s.val}</div></div>`).join('');
   const grid = document.getElementById('calendarGrid');
-  let html = dayKeys.map(d=>`<div style="text-align:center;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);padding-bottom:4px;">${d}<\/div>`).join('');
+  let html = dayKeys.map(d=>`<div style="text-align:center;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);padding-bottom:4px;">${d}</div>`).join('');
   dayKeys.forEach((dk,i) => {
     const entry = getEffectiveEntry(week.kw, dk) || week.days[dk];
     const cellDate = new Date(weekStart); cellDate.setDate(cellDate.getDate()+i);
@@ -2255,10 +2246,10 @@ function renderCalendar() {
       const allStrava2 = getAllStravaForDay(dateStr);
       const extraBadges = allStrava2.map(a => stravaTypeBadge(a)).join('');
       html+=`<div style="border-radius:10px;background:var(--surface2);border:1px dashed var(--border);padding:8px 7px;min-height:100px;opacity:0.5;">
-        <div style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:4px;">${cellDate.toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}<\/div>
+        <div style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:4px;">${cellDate.toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}</div>
         ${extraBadges}
-        <button onclick="openEditModal(${week.kw},'${dk}',null)" style="margin-top:4px;background:none;border:1px dashed var(--border);border-radius:5px;padding:2px 6px;font-size:10px;color:var(--muted2);cursor:pointer;width:100%;">+ Einheit<\/button>
-      <\/div>`;
+        <button onclick="openEditModal(${week.kw},'${dk}',null)" style="margin-top:4px;background:none;border:1px dashed var(--border);border-radius:5px;padding:2px 6px;font-size:10px;color:var(--muted2);cursor:pointer;width:100%;">+ Einheit</button>
+      </div>`;
       return;
     }
 
@@ -2271,25 +2262,25 @@ function renderCalendar() {
 
     html+=`<div style="border-radius:10px;background:${bg};border:1px solid ${border};padding:8px 7px;min-height:100px;transition:border-color 0.15s;${isPast&&!isDone?'opacity:0.7;':''}position:relative;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
-        <span style="font-size:13px;">${entry.icon}<\/span>
+        <span style="font-size:13px;">${entry.icon}</span>
         <div style="display:flex;gap:3px;align-items:center;">
-          ${isEdited?'<span style="font-size:9px;color:var(--blue);" title="Bearbeitet">✏️<\/span>':''}
-          <button onclick="event.stopPropagation();openEditModal(${week.kw},'${dk}',null)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:4px;width:18px;height:18px;cursor:pointer;font-size:9px;color:var(--muted2);display:flex;align-items:center;justify-content:center;" title="Bearbeiten">✎<\/button>
-          <button onclick="event.stopPropagation();toggleDone(${week.kw},'${dk}')" style="background:${isDone?'rgba(62,207,110,0.2)':'rgba(255,255,255,0.06)'};border:1px solid ${isDone?'rgba(62,207,110,0.5)':'var(--border)'};border-radius:4px;width:18px;height:18px;cursor:pointer;font-size:11px;color:${isDone?'var(--green)':'var(--muted2)'};display:flex;align-items:center;justify-content:center;" title="Erledigt">${isDone?'✓':'○'}<\/button>
-        <\/div>
-      <\/div>
-      ${isToday?'<div style="font-size:9px;background:var(--accent);color:#000;border-radius:3px;padding:1px 5px;font-weight:700;font-family:DM Mono,monospace;display:inline-block;margin-bottom:2px;">heute<\/div>':''}
+          ${isEdited?'<span style="font-size:9px;color:var(--blue);" title="Bearbeitet">✏️</span>':''}
+          <button onclick="event.stopPropagation();openEditModal(${week.kw},'${dk}',null)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:4px;width:18px;height:18px;cursor:pointer;font-size:9px;color:var(--muted2);display:flex;align-items:center;justify-content:center;" title="Bearbeiten">✎</button>
+          <button onclick="event.stopPropagation();toggleDone(${week.kw},'${dk}')" style="background:${isDone?'rgba(62,207,110,0.2)':'rgba(255,255,255,0.06)'};border:1px solid ${isDone?'rgba(62,207,110,0.5)':'var(--border)'};border-radius:4px;width:18px;height:18px;cursor:pointer;font-size:11px;color:${isDone?'var(--green)':'var(--muted2)'};display:flex;align-items:center;justify-content:center;" title="Erledigt">${isDone?'✓':'○'}</button>
+        </div>
+      </div>
+      ${isToday?'<div style="font-size:9px;background:var(--accent);color:#000;border-radius:3px;padding:1px 5px;font-weight:700;font-family:DM Mono,monospace;display:inline-block;margin-bottom:2px;">heute</div>':''}
       <div onclick="calDayChat(${week.kw},'${dk}')" style="cursor:pointer;">
-        <div style="font-size:11px;font-weight:500;color:${color};line-height:1.3;margin-bottom:2px;">${entry.label}<\/div>
+        <div style="font-size:11px;font-weight:500;color:${color};line-height:1.3;margin-bottom:2px;">${entry.label}</div>
         ${entry.detail?`<div style="font-size:10px;color:var(--muted);line-height:1.3;">${entry.detail.slice(0,50)}${entry.detail.length>50?'…':''}</div>`:''}
-      <\/div>
+      </div>
       ${stravaMatch?`<div style="margin-top:3px;padding:2px 5px;background:rgba(252,76,2,0.18);border-radius:4px;font-size:10px;color:#fc8c02;font-family:'DM Mono',monospace;cursor:pointer;" onclick="calDayChat(${week.kw},'${dk}')">${stravaIcon(stravaMatch.type)} ${(stravaMatch.distance/1000).toFixed(1)}km${stravaMatch.average_heartrate?' Ø'+Math.round(stravaMatch.average_heartrate)+'bpm':''}</div>`:''}
       ${localStorage.getItem('sc_log_kw'+week.kw+'_'+dk)?`<div style="font-size:10px;color:var(--blue);">📝</div>`:''}
       ${extras.map(ex=>`<div style="margin-top:3px;padding:2px 5px;background:rgba(180,122,255,0.15);border-radius:4px;font-size:10px;color:#b47aff;display:flex;align-items:center;gap:4px;"><span>${ex.icon||'⭐'}</span><span>${ex.label}</span><button onclick="event.stopPropagation();removeExtra(${week.kw},'${dk}',${ex.idx})" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:10px;margin-left:auto;">✕</button></div>`).join('')}
       ${stravaExtras.map(a=>`<div style="margin-top:3px;padding:2px 5px;background:rgba(252,76,2,0.1);border-radius:4px;font-size:10px;color:#fc8c02;font-family:'DM Mono',monospace;">${stravaIcon(a.type)} ${a.name.slice(0,18)} ${(a.distance/1000).toFixed(1)}km</div>`).join('')}
-      <div style="font-size:10px;color:var(--muted2);margin-top:2px;font-family:'DM Mono',monospace;">${cellDate.toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}<\/div>
-      <button onclick="event.stopPropagation();openAddExtra(${week.kw},'${dk}')" style="margin-top:4px;background:none;border:1px dashed rgba(180,122,255,0.3);border-radius:4px;padding:1px 0;font-size:10px;color:rgba(180,122,255,0.6);cursor:pointer;width:100%;">+ Extra<\/button>
-    <\/div>`;
+      <div style="font-size:10px;color:var(--muted2);margin-top:2px;font-family:'DM Mono',monospace;">${cellDate.toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}</div>
+      <button onclick="event.stopPropagation();openAddExtra(${week.kw},'${dk}')" style="margin-top:4px;background:none;border:1px dashed rgba(180,122,255,0.3);border-radius:4px;padding:1px 0;font-size:10px;color:rgba(180,122,255,0.6);cursor:pointer;width:100%;">+ Extra</button>
+    </div>`;
   });
   grid.innerHTML = html;
   document.getElementById('btnPrevKw').disabled = currentKwIndex===0;
@@ -2394,15 +2385,15 @@ function addWelcomeMessage() {
   const wfl = new Date('2026-05-10');
   const daysToWFL = Math.ceil((wfl - new Date()) / (1000*60*60*24));
   
-  const welcomeHtml = `Hey Tom! Hier ist dein <strong>Seitenstecher Coach<\/strong>.<br><br>
-<strong>Heute (${dayName}):<\/strong> ${plan.icon} ${plan.label}<br>
-<span style="font-size: 14px; color: var(--muted);">${plan.detail}<\/span>
+  const welcomeHtml = `Hey Tom! Hier ist dein <strong>Seitenstecher Coach</strong>.<br><br>
+<strong>Heute (${dayName}):</strong> ${plan.icon} ${plan.label}<br>
+<span style="font-size: 14px; color: var(--muted);">${plan.detail}</span>
 <div class="data-card" style="margin-top: 10px;">
-  <div class="data-card-header">🐰 Wings for Life — ${daysToWFL} Tage<\/div>
+  <div class="data-card-header">🐰 Wings for Life — ${daysToWFL} Tage</div>
   <div style="padding: 10px 12px; font-size: 14px; color: var(--muted); line-height: 1.6;">
-    Startpace: <strong>5:20–5:30/km<\/strong> (erste 30 min konservativ) → steigern wenn Catcher Car noch weit. Kein Verpflegungsrisiko — alles läuft von selbst ab.
-  <\/div>
-<\/div>`;
+    Startpace: <strong>5:20–5:30/km</strong> (erste 30 min konservativ) → steigern wenn Catcher Car noch weit. Kein Verpflegungsrisiko — alles läuft von selbst ab.
+  </div>
+</div>`;
   
   appendMsg('coach', welcomeHtml);
 }
@@ -2440,12 +2431,12 @@ function showTyping() {
   div.className = 'msg coach';
   div.id = 'typing';
   div.innerHTML = `
-    <div class="msg-avatar coach">S<\/div>
+    <div class="msg-avatar coach">S</div>
     <div class="typing">
-      <div class="typing-dot"><\/div>
-      <div class="typing-dot"><\/div>
-      <div class="typing-dot"><\/div>
-    <\/div>`;
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -2616,14 +2607,14 @@ async function sendMessage() {
       } else if (errType === 'insufficient_quota' || errMsg.includes('credit')) {
         appendMsg('coach', '⚠️ <strong>Kein Guthaben.</strong> Bitte auf <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a> Guthaben aufladen.');
       } else {
-        appendMsg('coach', `⚠️ API Fehler: <code>${errMsg}<\/code>`);
+        appendMsg('coach', `⚠️ API Fehler: <code>${errMsg}</code>`);
       }
     } else {
-      appendMsg('coach', `⚠️ Unbekannte Antwort: <code>${JSON.stringify(data).slice(0,200)}<\/code>`);
+      appendMsg('coach', `⚠️ Unbekannte Antwort: <code>${JSON.stringify(data).slice(0,200)}</code>`);
     }
   } catch (err) {
     removeTyping();
-    appendMsg('coach', `⚠️ Verbindungsfehler: <code>${err.message}<\/code> — Bitte prüfe ob der API Key korrekt ist und ob du Internetzugang hast.`);
+    appendMsg('coach', `⚠️ Verbindungsfehler: <code>${err.message}</code> — Bitte prüfe ob der API Key korrekt ist und ob du Internetzugang hast.`);
   }
   
   document.getElementById('sendBtn').disabled = false;
@@ -2964,36 +2955,20 @@ function connectWithToken() {
   if (!token) return;
   stravaToken = token;
   localStorage.setItem('sc_access_token', token);
-  sbUpsert('sc_strava', { access_token: token }); // save to Supabase
   input.value = '';
-  const sd = document.getElementById('stravaDisconnected');
-  if (sd) sd.style.display = 'none';
   document.getElementById('tokenConnected').style.display = 'block';
   updateStravaBadge(true);
   appendMsg('coach', '✅ Strava verbunden! Ich lade deine letzten Aktivitäten...');
   loadStravaActivities().then(() => {
-    appendMsg('coach', `Ich habe <strong>${stravaActivities.length} Aktivitäten<\/strong> geladen.`);
+    appendMsg('coach', `Ich habe <strong>${stravaActivities.length} Aktivitäten</strong> geladen. Du kannst sie im Tab "Aktivitäten" sehen oder mich einfach fragen.`);
   });
 }
 
 function disconnectStrava() {
-  stravaToken = '';
-  stravaActivities = [];
+  stravaToken = ''; stravaActivities = [];
   localStorage.removeItem('sc_access_token');
-  localStorage.removeItem('sc_refresh_token');
-  localStorage.removeItem('sc_token_expiry');
-  localStorage.removeItem('sc_strava_cache');
-  // Clear from Supabase too
-  sbUpsert('sc_strava', { access_token: null, refresh_token: null, expires_at: null });
-  const sd = document.getElementById('stravaDisconnected');
-  if (sd) sd.style.display = 'block';
   document.getElementById('tokenConnected').style.display = 'none';
   updateStravaBadge(false);
-  // Clear activities list
-  const list = document.getElementById('activityList');
-  if (list) list.innerHTML = '';
-  const prompt = document.getElementById('connectPrompt');
-  if (prompt) prompt.style.display = 'block';
 }
 
 // ── Strava persistent cache ──
@@ -3014,41 +2989,6 @@ function mergeStravaCache(fresh) {
   return merged;
 }
 
-async function maybeRefreshStravaToken() {
-  const expiry = parseInt(localStorage.getItem('sc_token_expiry') || '0');
-  const refreshToken = localStorage.getItem('sc_refresh_token');
-  if (!refreshToken) return false;
-  // Refresh if expired or expires within 1 hour
-  if (Date.now() / 1000 < expiry - 3600) return true; // still valid
-  try {
-    console.log('[Strava] Token expired, refreshing...');
-    const res = await fetch(`${SB_URL}/functions/v1/strava-oauth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ refresh_token: refreshToken })
-    });
-    const data = await res.json();
-    if (data.access_token) {
-      stravaToken = data.access_token;
-      localStorage.setItem('sc_access_token', data.access_token);
-      localStorage.setItem('sc_refresh_token', data.refresh_token || refreshToken);
-      localStorage.setItem('sc_token_expiry', String(data.expires_at || ''));
-      await sbUpsert('sc_strava', {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token || refreshToken,
-        expires_at: data.expires_at
-      });
-      console.log('[Strava] Token refreshed successfully');
-      return true;
-    }
-    console.log('[Strava] Token refresh failed:', data);
-    return false;
-  } catch(e) {
-    console.log('[Strava] Token refresh error:', e);
-    return false;
-  }
-}
-
 async function loadStravaActivities() {
   const prompt = document.getElementById('connectPrompt');
   const list = document.getElementById('activityList');
@@ -3056,64 +2996,41 @@ async function loadStravaActivities() {
   if (list) { list.style.display = 'flex'; list.innerHTML = '<div class="loading-acts">Lade Aktivitäten...</div>'; }
 
   // Always load from Supabase first (fast, works on PWA)
-  console.log('[Strava] Loading from Supabase...');
   await loadActivitiesFromSupabase();
-  console.log('[Strava] Supabase loaded:', stravaActivities.length, 'activities');
 
   // Then sync new ones from Strava API in background
   const token = localStorage.getItem('sc_access_token');
-  if (!token) {
-    console.log('[Strava] No token found');
-    if (list && !stravaActivities.length) list.innerHTML = '<div class="loading-acts" style="color:var(--muted);">Kein Strava Token — bitte verbinden.</div>';
-    return;
-  }
+  if (!token) return;
   stravaToken = token;
-  // Refresh token if expired
-  const tokenValid = await maybeRefreshStravaToken();
-  if (!tokenValid) {
-    console.log('[Strava] Token invalid, using cache only');
-    if (list && stravaActivities.length) renderActivities();
-    return;
-  }
-  console.log('[Strava] Token valid, syncing from API...');
 
   try {
+    // Find most recent activity we have
     const existing = await sbGet('sc_activities', { user_id: `eq.${SB_USER}`, order: 'activity_date.desc', limit: '1' });
     const afterTs = existing[0] ? Math.floor(new Date(existing[0].activity_date).getTime() / 1000) : 0;
-    console.log('[Strava] Last activity date:', existing[0]?.activity_date || 'none', '→ afterTs:', afterTs);
 
+    // Fetch new activities only (or all 500 on first run)
     let fresh = [];
     const maxPages = afterTs ? 1 : 5;
     for (let page = 1; page <= maxPages; page++) {
       try {
         let url = `https://www.strava.com/api/v3/athlete/activities?per_page=100&page=${page}`;
         if (afterTs) url += `&after=${afterTs}`;
-        console.log('[Strava] Fetching page', page, url);
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${stravaToken}` } });
-        console.log('[Strava] Page', page, 'status:', res.status);
-        if (!res.ok) { console.log('[Strava] Not ok, stopping'); break; }
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) break;
         const batch = await res.json();
-        console.log('[Strava] Page', page, 'got', batch.length, 'activities');
         if (!Array.isArray(batch) || !batch.length) break;
         fresh = fresh.concat(batch);
         if (batch.length < 100) break;
-      } catch(e) { console.log('[Strava] Fetch error:', e); break; }
+      } catch(e) { break; }
     }
 
-    console.log('[Strava] Total fresh:', fresh.length);
     if (fresh.length) {
-      console.log('[Strava] Saving to Supabase...');
       await saveActivitiesToSupabase(fresh);
       await loadActivitiesFromSupabase();
-      console.log('[Strava] Done. Total:', stravaActivities.length);
-    } else {
-      console.log('[Strava] No new activities');
-      if (list && stravaActivities.length) renderActivities();
     }
     updateStravaBadge(true);
   } catch(err) {
-    console.log('[Strava] Error:', err);
-    if (list && stravaActivities.length) renderActivities();
+    console.log('Strava sync error:', err);
   }
 }
 
@@ -3176,26 +3093,26 @@ function renderActivities() {
     const card = document.createElement('div');
     card.className = 'activity-card';
     card.innerHTML = `
-      <div class="act-type ${typeClass}">${typeIcon}<\/div>
+      <div class="act-type ${typeClass}">${typeIcon}</div>
       <div class="act-info">
-        <div class="act-name">${act.name}<\/div>
-        <div class="act-date">${date} · ${act.type}<\/div>
-      <\/div>
+        <div class="act-name">${act.name}</div>
+        <div class="act-date">${date} · ${act.type}</div>
+      </div>
       <div class="act-stats">
         <div>
-          <div class="act-stat-val">${dist}<\/div>
-          <div class="act-stat-lbl">km<\/div>
-        <\/div>
+          <div class="act-stat-val">${dist}</div>
+          <div class="act-stat-lbl">km</div>
+        </div>
         <div>
-          <div class="act-stat-val">${time}<\/div>
-          <div class="act-stat-lbl">Zeit<\/div>
-        <\/div>
+          <div class="act-stat-val">${time}</div>
+          <div class="act-stat-lbl">Zeit</div>
+        </div>
         ${pace ? `<div><div class="act-stat-val">${pace}</div><div class="act-stat-lbl">/km</div></div>` : ''}
         <div>
-          <div class="act-stat-val">${hr}<\/div>
-          <div class="act-stat-lbl">bpm<\/div>
-        <\/div>
-      <\/div>
+          <div class="act-stat-val">${hr}</div>
+          <div class="act-stat-lbl">bpm</div>
+        </div>
+      </div>
     `;
     card.onclick = () => openActDetail(act);
     list.appendChild(card);
@@ -3315,9 +3232,9 @@ function renderWellness() {
       })(),
       color: (typeof lastHrv==='number' && lastHrv < 70) || sleepWarn ? '#ff5555' : typeof lastHrv==='number' && lastHrv < 80 ? '#ffb547' : '#3ecf6e' }
   ].map(s => `<div style="background:var(--surface2);border-radius:8px;padding:7px 14px;">
-    <div style="font-size:11px;color:var(--muted);">${s.label}<\/div>
-    <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:${s.color};">${s.val}<\/div>
-  <\/div>`).join('');
+    <div style="font-size:11px;color:var(--muted);">${s.label}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:${s.color};">${s.val}</div>
+  </div>`).join('');
 
   // Charts
   const labels = entries.map(e => e.date.slice(5));
@@ -3372,23 +3289,23 @@ function renderWellness() {
     const _sleepWarn = e.sleep && e.hrv && e.sleep < 65 && e.hrv < 80;
     const slC  = e.sleep ? (_sleepWarn ? '#ff5555' : e.sleep < 65 ? '#ffb547' : '#3ecf6e') : '#555';
     return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);align-items:center;">
-      <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${e.date}<\/span>
-      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:${hrvC};">${e.hrv ? e.hrv + ' ms' : '—'}<\/span>
-      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:${slC};">${e.sleep || '—'}<\/span>
-      <span style="font-size:12px;color:var(--muted);">${e.sleepH ? e.sleepH + 'h' : '—'}<\/span>
-      <button onclick="deleteWellness('${e.date}')" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:12px;padding:2px 4px;">✕<\/button>
-    <\/div>`;
+      <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${e.date}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:${hrvC};">${e.hrv ? e.hrv + ' ms' : '—'}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:${slC};">${e.sleep || '—'}</span>
+      <span style="font-size:12px;color:var(--muted);">${e.sleepH ? e.sleepH + 'h' : '—'}</span>
+      <button onclick="deleteWellness('${e.date}')" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:12px;padding:2px 4px;">✕</button>
+    </div>`;
   }).join('');
 
   document.getElementById('wellnessTable').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;padding:7px 16px;background:rgba(0,0,0,0.2);">
-      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">DATUM<\/span>
-      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">HRV<\/span>
-      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">SLEEP SCORE<\/span>
-      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">DAUER<\/span>
-      <span><\/span>
-    <\/div>
-    ${tableRows || '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Noch keine Einträge<\/div>'}
+      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">DATUM</span>
+      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">HRV</span>
+      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">SLEEP SCORE</span>
+      <span style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;">DAUER</span>
+      <span></span>
+    </div>
+    ${tableRows || '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Noch keine Einträge</div>'}
   `;
 }
 
@@ -3476,7 +3393,7 @@ function openAddExtra(kw, dk) {
     {icon:'💆', label:'Massage / Rollen'},
   ];
   document.getElementById('extraQuickBtns').innerHTML = presets.map(p =>
-    `<button onclick="setExtraPreset('${p.icon}','${p.label.replace(/'/g,"\'")}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text);cursor:pointer;">${p.icon} ${p.label}<\/button>`
+    `<button onclick="setExtraPreset('${p.icon}','${p.label.replace(/'/g,"\'")}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text);cursor:pointer;">${p.icon} ${p.label}</button>`
   ).join('');
   document.getElementById('extraModal').classList.add('open');
 }
@@ -3555,16 +3472,15 @@ async function openActDetail(act) {
 
   document.getElementById('adStats').innerHTML = stats.map(s =>
     `<div style="background:var(--surface);padding:10px 14px;">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">${s.label}<\/div>
-      <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;">${s.val}<\/div>
-    <\/div>`
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">${s.label}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;">${s.val}</div>
+    </div>`
   ).join('');
 
   // Strava link
   document.getElementById('adStravaLink').href = 'https://www.strava.com/activities/' + act.id;
 
-  // Refresh token if expired before API calls
-  await maybeRefreshStravaToken();
+  // Load detail from API
   const token = localStorage.getItem('sc_access_token');
   if (!token) { document.getElementById('adLoading').textContent = 'Kein Strava-Token — Login nötig'; return; }
 
@@ -3600,9 +3516,9 @@ async function openActDetail(act) {
         }
       });
       let badgeHTML = '';
-      if (gold)   badgeHTML += `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${gold} PR${gold>1?'s':''}<\/div>`;
-      if (silver) badgeHTML += `<div style="background:rgba(192,192,192,0.15);border:1px solid rgba(192,192,192,0.4);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#c0c0c0;">🥈 ${silver} 2. Platz<\/div>`;
-      if (bronze) badgeHTML += `<div style="background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#cd7f32;">🥉 ${bronze} 3. Platz<\/div>`;
+      if (gold)   badgeHTML += `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${gold} PR${gold>1?'s':''}</div>`;
+      if (silver) badgeHTML += `<div style="background:rgba(192,192,192,0.15);border:1px solid rgba(192,192,192,0.4);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#c0c0c0;">🥈 ${silver} 2. Platz</div>`;
+      if (bronze) badgeHTML += `<div style="background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#cd7f32;">🥉 ${bronze} 3. Platz</div>`;
       if (badgeHTML) {
         badges.style.display = 'flex';
         badges.style.gap = '6px';
@@ -3612,7 +3528,7 @@ async function openActDetail(act) {
     } else if (detail.pr_count > 0) {
       // Fallback if best_efforts not available
       badges.style.display = 'block';
-      badges.innerHTML = `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${detail.pr_count} PR${detail.pr_count>1?'s':''}<\/div>`;
+      badges.innerHTML = `<div style="background:rgba(232,255,71,0.15);border:1px solid rgba(232,255,71,0.5);border-radius:6px;padding:3px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#e8ff47;">⭐ ${detail.pr_count} PR${detail.pr_count>1?'s':''}</div>`;
     }
 
     // HR Chart (use laps for HR data points)
@@ -3696,10 +3612,10 @@ function renderActivityHRChart(laps, detail) {
   const zoneColors = ['#4a9eff','#3ecf6e','#e8ff47','#ffb547','#ff5555'];
   const zoneNames  = ['Z1','Z2','Z3','Z4','Z5'];
   document.getElementById('adZoneBars').innerHTML = zoneCounts.map((c,i) =>
-    `<div style="flex:${c};background:${zoneColors[i]};opacity:0.8;min-width:${c>0?'4px':'0'};"><\/div>`
+    `<div style="flex:${c};background:${zoneColors[i]};opacity:0.8;min-width:${c>0?'4px':'0'};"></div>`
   ).join('');
   document.getElementById('adZoneLabels').innerHTML = zoneCounts.map((c,i) =>
-    c > 0 ? `<span style="flex:${c};color:${zoneColors[i]};text-align:center;min-width:${c>0?'4px':'0'}">${zoneNames[i]} ${Math.round(c/total*100)}%<\/span>` : ''
+    c > 0 ? `<span style="flex:${c};color:${zoneColors[i]};text-align:center;min-width:${c>0?'4px':'0'}">${zoneNames[i]} ${Math.round(c/total*100)}%</span>` : ''
   ).join('');
 }
 
@@ -3709,14 +3625,14 @@ function renderLapsTable(laps, actType) {
     <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace;">
       <thead>
         <tr style="border-bottom:1px solid var(--border);">
-          <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:400;">#<\/th>
-          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Dist<\/th>
-          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Zeit<\/th>
-          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">${isRun ? 'Pace' : isSwim ? '/100m' : 'km/h'}<\/th>
-          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Puls<\/th>
-          ${laps.some(l=>l.average_cadence) ? '<th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Kad<\/th>' : ''}
-        <\/tr>
-      <\/thead>
+          <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:400;">#</th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Dist</th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Zeit</th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">${isRun ? 'Pace' : isSwim ? '/100m' : 'km/h'}</th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Puls</th>
+          ${laps.some(l=>l.average_cadence) ? '<th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Kad</th>' : ''}
+        </tr>
+      </thead>
       <tbody>`;
 
   laps.forEach((lap, i) => {
@@ -3736,13 +3652,13 @@ function renderLapsTable(laps, actType) {
     const isActive = lap.lap_index !== undefined;
 
     html += `<tr style="border-bottom:1px solid var(--border);${i%2===0?'background:rgba(255,255,255,0.01)':''}">
-      <td style="padding:6px 8px;color:var(--muted);">${i+1}<\/td>
-      <td style="padding:6px 8px;text-align:right;">${dist}km<\/td>
-      <td style="padding:6px 8px;text-align:right;">${time}<\/td>
-      <td style="padding:6px 8px;text-align:right;color:var(--accent);">${pace ? pace+(isRun?'/km':'/100m') : speed ? speed+'km/h' : '—'}<\/td>
-      <td style="padding:6px 8px;text-align:right;color:${hrColor};">${hr}${typeof hr==='number'?' bpm':''}<\/td>
+      <td style="padding:6px 8px;color:var(--muted);">${i+1}</td>
+      <td style="padding:6px 8px;text-align:right;">${dist}km</td>
+      <td style="padding:6px 8px;text-align:right;">${time}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--accent);">${pace ? pace+(isRun?'/km':'/100m') : speed ? speed+'km/h' : '—'}</td>
+      <td style="padding:6px 8px;text-align:right;color:${hrColor};">${hr}${typeof hr==='number'?' bpm':''}</td>
       ${laps.some(l=>l.average_cadence) ? `<td style="padding:6px 8px;text-align:right;color:var(--muted);">${kad||'—'}</td>` : ''}
-    <\/tr>`;
+    </tr>`;
   });
 
   html += '</tbody></table></div>';
@@ -3789,7 +3705,7 @@ function stravaIcon(type) {
 }
 
 function stravaTypeBadge(a) {
-  return `<div style="padding:2px 5px;background:rgba(252,76,2,0.15);border-radius:4px;font-size:10px;color:#fc8c02;font-family:'DM Mono',monospace;margin-bottom:2px;">${stravaIcon(a.type)} ${a.name.slice(0,16)} ${a.distance?(a.distance/1000).toFixed(1)+'km':''}<\/div>`;
+  return `<div style="padding:2px 5px;background:rgba(252,76,2,0.15);border-radius:4px;font-size:10px;color:#fc8c02;font-family:'DM Mono',monospace;margin-bottom:2px;">${stravaIcon(a.type)} ${a.name.slice(0,16)} ${a.distance?(a.distance/1000).toFixed(1)+'km':''}</div>`;
 }
 
 // ── PDF EXPORT ──
@@ -3799,7 +3715,7 @@ function exportPDF() {
   const dayKeys = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 
   let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>Seitenstecher Trainingsplan 2026<\/title>
+  <title>Seitenstecher Trainingsplan 2026</title>
   <style>
     body { font-family: Arial, sans-serif; font-size: 10px; color: #111; margin: 0; padding: 16px; }
     h1 { font-size: 18px; margin-bottom: 4px; }
@@ -3825,34 +3741,34 @@ function exportPDF() {
     .zones { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; }
     .zone-row { display: flex; gap: 16px; font-size: 9px; }
     @media print { body { padding: 8px; } .week { page-break-inside: avoid; } }
-  <\/style><\/head><body>`;
+  </style></head><body>`;
 
-  html += `<h1>🟡 Seitenstecher Trainingsplan 2026<\/h1>
-  <h2>Version Coach-Export · Stand ${new Date().toLocaleDateString('de')} · Tom · 83kg · HFmax 199<\/h2>
+  html += `<h1>🟡 Seitenstecher Trainingsplan 2026</h1>
+  <h2>Version Coach-Export · Stand ${new Date().toLocaleDateString('de')} · Tom · 83kg · HFmax 199</h2>
 
   <div class="zones">
-    <strong style="font-size:10px;">Pulszonen (Leistungsdiagnostik 05.05.26):<\/strong>
+    <strong style="font-size:10px;">Pulszonen (Leistungsdiagnostik 05.05.26):</strong>
     <div class="zone-row" style="margin-top:4px;">
-      <span><b>Z1/KB<\/b> 120–139<\/span><span><b>Z2/GA1<\/b> 140–162 | 5:50–6:49/km<\/span>
-      <span><b>Z3/GA2<\/b> 163–170 | 4:44–5:49/km<\/span><span><b>Z4/EB<\/b> 171–177 | 4:01–4:43/km<\/span>
-      <span><b>Z5/VO2<\/b> 178–191 | 3:44–4:00/km<\/span>
-    <\/div>
-  <\/div>
+      <span><b>Z1/KB</b> 120–139</span><span><b>Z2/GA1</b> 140–162 | 5:50–6:49/km</span>
+      <span><b>Z3/GA2</b> 163–170 | 4:44–5:49/km</span><span><b>Z4/EB</b> 171–177 | 4:01–4:43/km</span>
+      <span><b>Z5/VO2</b> 178–191 | 3:44–4:00/km</span>
+    </div>
+  </div>
 
   <div class="races">`;
   TRAINING_PLAN.races.forEach(r => {
-    html += `<span class="race" style="background:${r.color||'#111'}">${r.date.split('-').reverse().join('.')} ${r.name} · ${r.goal}<\/span>`;
+    html += `<span class="race" style="background:${r.color||'#111'}">${r.date.split('-').reverse().join('.')} ${r.name} · ${r.goal}</span>`;
   });
-  html += `<\/div>`;
+  html += `</div>`;
 
   weeks.forEach(week => {
     html += `<div class="week">
       <div class="week-header">
-        <span class="week-kw">KW ${week.kw}<\/span>
-        <span class="week-phase">${week.phase}<\/span>
-        <span class="week-vol">${week.laufVol}<\/span>
-      <\/div>
-      <div class="week-note">${week.note}<\/div>
+        <span class="week-kw">KW ${week.kw}</span>
+        <span class="week-phase">${week.phase}</span>
+        <span class="week-vol">${week.laufVol}</span>
+      </div>
+      <div class="week-note">${week.note}</div>
       <div class="days">`;
 
     dayKeys.forEach((dk, i) => {
@@ -3873,25 +3789,25 @@ function exportPDF() {
       ].filter(Boolean).join(' ');
 
       html += `<div class="${cls}">
-        <div class="day-header"><span>${dk}<\/span><span>${cellDate.toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}<\/span><\/div>`;
+        <div class="day-header"><span>${dk}</span><span>${cellDate.toLocaleDateString('de',{day:'2-digit',month:'2-digit'})}</span></div>`;
 
       if (entry) {
-        html += `<div class="day-label">${entry.icon||''} ${entry.label||''}<\/div>`;
-        if (entry.detail) html += `<div class="day-detail">${entry.detail}<\/div>`;
+        html += `<div class="day-label">${entry.icon||''} ${entry.label||''}</div>`;
+        if (entry.detail) html += `<div class="day-detail">${entry.detail}</div>`;
       }
       extras.forEach(ex => {
-        html += `<div class="day-extra">+ ${ex.icon||''} ${ex.label}<\/div>`;
+        html += `<div class="day-extra">+ ${ex.icon||''} ${ex.label}</div>`;
       });
       if (log && (log.dist || log.note)) {
-        html += `<div class="day-log">✓ ${log.dist?log.dist+'km ':''} ${log.pace?log.pace+'/km ':''} ${log.hr?log.hr+'bpm ':''} ${log.note?'·'+log.note.slice(0,30):''}<\/div>`;
+        html += `<div class="day-log">✓ ${log.dist?log.dist+'km ':''} ${log.pace?log.pace+'/km ':''} ${log.hr?log.hr+'bpm ':''} ${log.note?'·'+log.note.slice(0,30):''}</div>`;
       }
-      html += `<\/div>`;
+      html += `</div>`;
     });
 
-    html += `<\/div><\/div>`;
+    html += `</div></div>`;
   });
 
-  html += `<\/body><\/html>`;
+  html += `</body></html>`;
   printWin.document.write(html);
   printWin.document.close();
   setTimeout(() => printWin.print(), 500);
@@ -4015,8 +3931,8 @@ function updatePRPreview() {
   if (both.pace !== val || both.time !== val) {
     preview.style.display = 'block';
     preview.innerHTML = prInputType === 'pace'
-      ? `→ Finishzeit: <strong style="color:var(--text);">${both.time}<\/strong>`
-      : `→ Pace: <strong style="color:var(--text);">${both.pace}/km<\/strong>`;
+      ? `→ Finishzeit: <strong style="color:var(--text);">${both.time}</strong>`
+      : `→ Pace: <strong style="color:var(--text);">${both.pace}/km</strong>`;
   } else {
     preview.style.display = 'none';
   }
@@ -4111,19 +4027,19 @@ function renderPRList() {
     const best = entries[entries.length - 1];
     html += `<div style="padding:10px 14px;border-bottom:1px solid var(--border);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
-        <span style="font-size:13px;font-weight:500;">${catInfo.label}<\/span>
-        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);">▲ ${best.value} ${catInfo.unit}<\/span>
-      <\/div>
+        <span style="font-size:13px;font-weight:500;">${catInfo.label}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);">▲ ${best.value} ${catInfo.unit}</span>
+      </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         ${entries.map(e => `
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;font-size:11px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:5px;flex-shrink:0;">
             <span style="color:var(--muted);">${e.date.slice(5)}</span>
             <span style="color:var(--text);">${e.value}</span>
-            ${e.note ? `<span style="color:var(--muted2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">· ${e.note}<\/span>` : ''}
+            ${e.note ? `<span style="color:var(--muted2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">· ${e.note}</span>` : ''}
             <button onclick="deletePR(${e.idx})" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:10px;padding:0;line-height:1;">✕</button>
           </div>`).join('')}
-      <\/div>
-    <\/div>`;
+      </div>
+    </div>`;
   });
   container.innerHTML = html;
 }
@@ -4333,9 +4249,9 @@ function renderProgress() {
     { label: 'Form (TSB)', val: (latest.tsb > 0 ? '+' : '') + latest.tsb, color: tsbColor },
     { label: 'Ø Woche (km)', val: avgKm, color: '#e8ff47' },
   ].map(s => `<div style="background:var(--surface2);border-radius:8px;padding:8px 10px;min-width:0;">
-    <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.label}<\/div>
-    <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:${s.color};">${s.val}<\/div>
-  <\/div>`).join('');
+    <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.label}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:${s.color};">${s.val}</div>
+  </div>`).join('');
 
   if (typeof Chart === 'undefined') return;
 
