@@ -2998,20 +2998,21 @@ function init_real() {
     renderCalendar();
     // Render chat from Supabase data
     const msgs = document.getElementById('messages');
-    if (msgs && conversationHistory.length > 0) {
+    if (msgs) {
       msgs.innerHTML = '';
-      conversationHistory.forEach(m => {
-        if (m.role === 'user') {
-          // Strip system context appended to user messages
-          const display = m.content.split('\n\n[')[0].split('\n\nPLAN FÜR')[0].split('\n\nAktuelle Einheit')[0];
-          if (display.trim()) appendMsg('user', escHtml(display.trim()));
-        } else if (m.role === 'assistant') {
-          appendMsg('coach', formatReply(m.content));
-        }
-      });
-      msgs.scrollTop = msgs.scrollHeight;
-    } else if (conversationHistory.length === 0) {
-      addWelcomeMessage();
+      if (conversationHistory.length > 0) {
+        conversationHistory.forEach(m => {
+          if (m.role === 'user') {
+            const d = m.content.split('\n\n[')[0];
+            appendMsg('user', d);
+          } else if (m.role === 'assistant') {
+            appendMsg('coach', formatReply(m.content));
+          }
+        });
+        msgs.scrollTop = msgs.scrollHeight;
+      } else {
+        addWelcomeMessage();
+      }
     }
     // Auto-refresh Strava AFTER sync so token is guaranteed loaded from Supabase
     const token = localStorage.getItem('sc_access_token');
