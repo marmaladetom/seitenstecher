@@ -2010,7 +2010,10 @@ let stravaToken = localStorage.getItem('sc_access_token') || '';
 let stravaRefreshToken = localStorage.getItem('sc_refresh_token') || '';
 let stravaTokenExpiry = parseInt(localStorage.getItem('sc_token_expiry') || '0');
 let stravaActivities = [];
-let conversationHistory = []; // loaded from Supabase only
+let conversationHistory = (() => {
+  try { const s = localStorage.getItem('sc_chat_history'); return s ? JSON.parse(s) : []; }
+  catch { return []; }
+})(); // fast local load, Supabase overwrites on sync
 let currentTab = 'chat';
 let currentSystemPrompt = SYSTEM_PROMPT();
 
@@ -2654,7 +2657,7 @@ async function sendMessage() {
       conversationHistory.push({ role: 'assistant', content: reply });
       // Keep last 20 messages, save to localStorage
       if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
-      try { localStorage.setItem('sc_chat_history', JSON.stringify(conversationHistory)); db.setChat(conversationHistory); } catch {}
+      localStorage.setItem('sc_chat_history', JSON.stringify(conversationHistory.slice(-20))); db.setChat(conversationHistory);
       appendMsg('coach', formatReply(displayReply));
     } else if (data.error) {
       const errType = data.error.type || '';
@@ -2896,7 +2899,6 @@ ${merged.goals}
 function clearChat() {
   if (!confirm('Chat-Verlauf löschen?')) return;
   conversationHistory = [];
-  conversationHistory = [];
   sbUpsert('sc_chat', { messages: [] });
   document.getElementById('messages').innerHTML = '';
   addWelcomeMessage();
@@ -2999,8 +3001,13 @@ function init_real() {
     if (msgs && conversationHistory.length > 0) {
       msgs.innerHTML = '';
       conversationHistory.forEach(m => {
-        if (m.role === 'user') appendMsg('user', m.content);
-        else if (m.role === 'assistant') appendMsg('coach', m.content);
+        if (m.role === 'user') {
+          // Strip system context appended to user messages
+          const display = m.content.split('\n\n[')[0].split('\n\nPLAN FÜR')[0].split('\n\nAktuelle Einheit')[0];
+          if (display.trim()) appendMsg('user', escHtml(display.trim()));
+        } else if (m.role === 'assistant') {
+          appendMsg('coach', formatReply(m.content));
+        }
       });
       msgs.scrollTop = msgs.scrollHeight;
     } else if (conversationHistory.length === 0) {
