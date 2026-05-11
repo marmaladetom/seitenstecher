@@ -40,13 +40,13 @@
     overflow: hidden;
     background: var(--bg);
   }
-  /* PWA: extend background into safe areas */
+  /* PWA: extend background into safe areas - use surface so status bar area matches header */
   :root {
-    background-color: var(--bg);
+    background-color: var(--surface);
   }
 
   body {
-    background: var(--bg);
+    background: var(--surface);
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     font-size: 17px;
@@ -2999,8 +2999,8 @@ function init_real() {
     if (msgs && conversationHistory.length > 0) {
       msgs.innerHTML = '';
       conversationHistory.forEach(m => {
-        if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0]));
-        else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
+        if (m.role === 'user') appendMsg('user', m.content);
+        else if (m.role === 'assistant') appendMsg('coach', m.content);
       });
       msgs.scrollTop = msgs.scrollHeight;
     } else if (conversationHistory.length === 0) {
