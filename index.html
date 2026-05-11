@@ -1972,38 +1972,9 @@ PLAN-ÄNDERUNGEN: Wenn Tom eine Einheit ändern möchte, antworte normal UND fü
 <planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}<\/planchange>
 Verwende exakt dieses Format. kw=Kalenderwoche (Zahl), day=Mo/Di/Mi/Do/Fr/Sa/So, type=run/bike/swim/gym/rest/race/brick. Nur einfügen wenn Tom explizit eine Änderung wünscht.`;
 
-function getRecentWellness() {
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0,10);
-    const w = (() => { try { return JSON.parse(localStorage.getItem('sc_wellness_'+key)||'null'); } catch { return null; } })();
-    if (w && (w.hrv || w.sleep || w.sleepH)) {
-      days.push({ date: key, ...w });
-    }
-  }
-  return days;
-}
-
 function SYSTEM_PROMPT() {
   const { currentWeekText, nextWeekText } = buildCurrentWeekContext();
-
-  // Inject recent wellness data
-  const wellness = getRecentWellness();
-  let wellnessText = '';
-  if (wellness.length) {
-    const lines = wellness.map(w => {
-      const parts = [];
-      if (w.hrv) parts.push(`HRV ${w.hrv}ms`);
-      if (w.sleep) parts.push(`Sleep ${w.sleep}/100`);
-      if (w.sleepH) parts.push(`${w.sleepH}h Schlaf`);
-      return `  ${w.date}: ${parts.join(' · ')}`;
-    }).join('\n');
-    wellnessText = '\n\nAKTUELLE WELLNESS-DATEN (letzte 7 Tage):\n' + lines;
-  }
-
   return SYSTEM_PROMPT_BASE
-    + wellnessText
     + '\n\nAKTUELLE WOCHE — VERBINDLICHER PLAN (nicht die allgemeine Struktur verwenden!):\n' + currentWeekText
     + (nextWeekText ? '\n\nNÄCHSTE WOCHE (Vorschau):\n' + nextWeekText : '');
 }
