@@ -1481,7 +1481,17 @@ const db = {
   async deleteWellness(dateStr) { localStorage.removeItem('sc_wellness_'+dateStr); await sbDelete('sc_wellness', { date: `eq.${dateStr}` }); },
   async setChat(messages) {
     const last20 = messages.slice(-20);
-    sbUpsert('sc_chat', { messages: last20 });
+    try {
+      await fetch(`${SB_URL}/rest/v1/sc_chat?on_conflict=user_id`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({ user_id: SB_USER, messages: last20, updated_at: new Date().toISOString() })
+      });
+    } catch(e) { console.log('setChat error:', e); }
   },
   async setStravaCache(activities) { localStorage.setItem('sc_strava_cache', JSON.stringify(activities)); await sbUpsert('sc_strava', { activities }); },
   async syncFromCloud() {
@@ -2996,7 +3006,16 @@ function init_real() {
     buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
     renderCalendar();
-    // Render chat from Supabase data
+    // Auto-refresh Strava
+    const token = localStorage.getItem('sc_access_token');
+    if (token) {
+      stravaToken = token;
+      loadStravaActivities().then(() => {
+        if (currentTab === 'activities') renderActivities();
+        renderCalendar();
+      });
+    }
+    // Render chat LAST so nothing overwrites it
     const msgs = document.getElementById('messages');
     if (msgs) {
       msgs.innerHTML = '';
@@ -3013,15 +3032,6 @@ function init_real() {
       } else {
         addWelcomeMessage();
       }
-    }
-    // Auto-refresh Strava AFTER sync so token is guaranteed loaded from Supabase
-    const token = localStorage.getItem('sc_access_token');
-    if (token) {
-      stravaToken = token;
-      loadStravaActivities().then(() => {
-        if (currentTab === 'activities') renderActivities();
-        renderCalendar();
-      });
     }
   });
 }
