@@ -3776,6 +3776,14 @@ function closeActDetail() {
   currentDetailActivity = null;
 }
 
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+}
+
 function analyzeCurrentActivity() {
   if (!currentDetailActivity) return;
   const act = currentDetailActivity;
@@ -3783,7 +3791,39 @@ function analyzeCurrentActivity() {
   const time = formatTime(act.moving_time);
   const pace = act.type === 'Run' ? formatPace(act.moving_time, act.distance) : null;
   const hr = act.average_heartrate ? Math.round(act.average_heartrate) : null;
-  const msg = `Analysiere diese Strava-Aktivität: ${act.name} am ${new Date(act.start_date).toLocaleDateString('de')}, ${dist}km in ${time}${pace?' ('+pace+'/km)':''}${hr?' Ø'+hr+'bpm':''}. Vergleiche mit meinem Trainingsplan und den Pulszonen.`;
+
+  // Find the plan entry for the activity's date (not today)
+  const actDate = new Date(act.start_date_local || act.start_date);
+  const actDateStr = actDate.toISOString().slice(0,10);
+  const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const dayKey = dayNames[actDate.getDay()];
+  const kwNum = getISOWeek(actDate);
+
+  // Find matching week in plan
+  let planContext = '';
+  for (const w of TRAINING_PLAN.weeks) {
+    const wStart = new Date(w.dateFrom);
+    const wEnd = new Date(wStart); wEnd.setDate(wEnd.getDate()+6);
+    if (actDate >= wStart && actDate <= wEnd) {
+      const eff = getEffectiveEntry(w.kw, dayKey) || w.days[dayKey];
+      if (eff) {
+        planContext = `
+
+PLAN FÜR DIESEN TAG (${dayKey} KW${w.kw}): ${eff.icon} ${eff.label}${eff.detail ? ' | ' + eff.detail : ''}`;
+      } else {
+        planContext = `
+
+PLAN FÜR DIESEN TAG (${dayKey} KW${w.kw}): Ruhe/kein Eintrag`;
+      }
+      break;
+    }
+  }
+
+  const dateStr = actDate.toLocaleDateString('de', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
+  const msg = `Analysiere diese Strava-Aktivität: ${act.name} am ${dateStr} (${dayKey} KW${kwNum}), ${dist}km in ${time}${pace?' @ '+pace+'/km':''}${hr?' Ø'+hr+' bpm':''}.${planContext}
+
+Bitte vergleiche NUR mit dem Plan dieses Tages (${dayKey} KW${kwNum}), nicht mit dem heutigen Tag.`;
+
   closeActDetail();
   switchTab('chat', null);
   quickPrompt(msg);
