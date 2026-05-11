@@ -2096,19 +2096,34 @@ function init() {
   buildWeekNav();
   buildRaceCountdown();
   buildPlanPanel();
-  // Chat loads from Supabase via syncFromCloud - show nothing until loaded
-  // First update UI from localStorage (instant)
   updateUIFromStorage();
-  // Then sync from Supabase and update again (gets cross-device data)
   db.syncFromCloud().then(() => {
     updateUIFromStorage();
-    buildWeekNav();
-    buildRaceCountdown();
-    buildPlanPanel();
-    updateTodayCard();
-    renderCalendar();
+    buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
-
+    renderCalendar();
+    const token = localStorage.getItem('sc_access_token');
+    if (token) {
+      stravaToken = token;
+      loadStravaActivities().then(() => {
+        if (currentTab === 'activities') renderActivities();
+        renderCalendar();
+      });
+    }
+    // Render chat LAST
+    const msgs = document.getElementById('messages');
+    if (msgs) {
+      msgs.innerHTML = '';
+      if (conversationHistory.length > 0) {
+        conversationHistory.forEach(m => {
+          if (m.role === 'user') appendMsg('user', m.content.split('\n\n[')[0]);
+          else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
+        });
+        msgs.scrollTop = msgs.scrollHeight;
+      } else {
+        addWelcomeMessage();
+      }
+    }
   });
 }
 
