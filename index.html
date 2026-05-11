@@ -127,7 +127,8 @@
     .main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     .chat-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .messages { flex: 1; min-height: 0; }
-    #progressPanel, #wellnessPanel { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #progressPanel, #wellnessPanel { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    #progressScroll { flex: 1; min-height: 0; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
     .logo-sub { display: none; }
     #menuToggle { display: flex !important; }
     #syncBadge { display: none; }
@@ -140,11 +141,8 @@
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
     /* Progress tab mobile */
-    #progressPanel canvas { min-height: 160px; height: 160px !important; }
-    #prChart { min-height: 180px !important; height: 180px !important; }
     #progressStats { gap: 6px !important; }
     #progressStats > div { padding: 6px 8px !important; }
-    #prList { min-height: 60px; }
   }
 
   /* ─── SIDEBAR ─── */
@@ -980,7 +978,7 @@
     </div>
 
     <!-- Progress Panel -->
-    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div class="activities-panel" id="progressPanel" style="flex-direction:column;padding:0;display:none;overflow:hidden;">
 
       <!-- Time range selector -->
       <div style="display:flex;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);">
@@ -992,13 +990,14 @@
       <!-- Stats strip -->
       <div id="progressStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);"></div>
 
-      
+      <!-- Charts scroll container -->
+      <div id="progressScroll" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:12px;">
 
         <!-- CTL/ATL/TSB Chart -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;flex-shrink:0;">
           <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Fitness · Fatigue · Form</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">CTL (42d) · ATL (7d) · TSB = CTL−ATL</div>
-          <div style="position:relative;height:150px;"><canvas id="ctlChart"></canvas></div>
+          <div style="position:relative;height:160px;"><canvas id="ctlChart"></canvas></div>
           <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;font-family:'DM Mono',monospace;">
             <span style="color:#4a9eff;">— Fitness (CTL)</span>
             <span style="color:#ff5555;">— Fatigue (ATL)</span>
@@ -1007,9 +1006,9 @@
         </div>
 
         <!-- Weekly Volume Chart -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;flex-shrink:0;">
           <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Wöchentliches Volumen (km)</div>
-          <div style="position:relative;height:130px;"><canvas id="volumeChart"></canvas></div>
+          <div style="position:relative;height:150px;"><canvas id="volumeChart"></canvas></div>
           <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;font-family:'DM Mono',monospace;">
             <span style="color:#e8ff47;">■ Laufen</span>
             <span style="color:#4a9eff;">■ Rad</span>
@@ -1018,16 +1017,16 @@
         </div>
 
         <!-- PR Tracker -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex-shrink:0;">
           <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
             <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;">PR Tracker</div>
             <button onclick="openPRModal()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">+ PR eintragen</button>
           </div>
-          <div id="prList" style="padding:8px 0;"></div>
+          <div id="prList" style="padding:8px 0;min-height:40px;"></div>
         </div>
 
         <!-- PR Chart -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex-shrink:0;">
           <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
             <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;">PR Entwicklung</div>
             <select id="prChartCat" onchange="renderPRChart()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;">
@@ -1041,13 +1040,13 @@
               <option value="70.3_total">70.3 Gesamt</option>
             </select>
           </div>
-          <div style="padding:14px;position:relative;height:180px;">
+          <div style="padding:14px;position:relative;height:200px;">
             <canvas id="prChart"></canvas>
             <div id="prChartEmpty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Keine Daten für diese Kategorie</div>
           </div>
         </div>
 
-      
+      </div>
     </div>
 
     <!-- PR Input Modal -->
