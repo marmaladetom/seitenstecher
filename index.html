@@ -1488,8 +1488,6 @@ const db = {
   async deleteWellness(dateStr) { localStorage.removeItem('sc_wellness_'+dateStr); await sbDelete('sc_wellness', { date: `eq.${dateStr}` }); },
   async setChat(messages) {
     const last20 = messages.slice(-20);
-    localStorage.setItem('sc_chat_history', JSON.stringify(last20));
-    // Save to Supabase - this makes it available on other devices
     sbUpsert('sc_chat', { messages: last20 });
   },
   async setStravaCache(activities) { localStorage.setItem('sc_strava_cache', JSON.stringify(activities)); await sbUpsert('sc_strava', { activities }); },
@@ -1512,12 +1510,7 @@ const db = {
       logs.forEach(r => localStorage.setItem('sc_log_kw'+r.kw+'_'+r.day, JSON.stringify({ dist: r.dist, time: r.time_min, hr: r.hr, pace: r.pace, note: r.note })));
       wellness.forEach(r => localStorage.setItem('sc_wellness_'+r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date })));
       if (chat[0] && chat[0].messages && chat[0].messages.length) {
-        const localChat = (() => { try { return JSON.parse(localStorage.getItem('sc_chat_history')||'[]'); } catch { return []; } })();
-        const cloudChat = chat[0].messages.slice(-20);
-        // Cloud wins if it has more or equal messages
-        if (cloudChat.length >= localChat.length) {
-          localStorage.setItem('sc_chat_history', JSON.stringify(cloudChat));
-        }
+        conversationHistory = chat[0].messages.slice(-20);
       }
       if (stravaRows[0]) {
         if (stravaRows[0].access_token && !stravaToken) {
@@ -2024,12 +2017,7 @@ let stravaToken = localStorage.getItem('sc_access_token') || '';
 let stravaRefreshToken = localStorage.getItem('sc_refresh_token') || '';
 let stravaTokenExpiry = parseInt(localStorage.getItem('sc_token_expiry') || '0');
 let stravaActivities = [];
-let conversationHistory = (() => {
-  try {
-    const saved = localStorage.getItem('sc_chat_history');
-    return saved ? JSON.parse(saved) : [];
-  } catch { return []; }
-})();
+let conversationHistory = []; // loaded from Supabase only
 let currentTab = 'chat';
 let currentSystemPrompt = SYSTEM_PROMPT();
 
@@ -2102,16 +2090,7 @@ function init() {
   buildWeekNav();
   buildRaceCountdown();
   buildPlanPanel();
-  // Restore chat history to UI
-  const _savedMsgs = conversationHistory;
-  if (_savedMsgs.length > 0) {
-    _savedMsgs.forEach(m => {
-      if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0]));
-      else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
-    });
-  } else {
-    addWelcomeMessage();
-  }
+  // Chat loads from Supabase via syncFromCloud - show nothing until loaded
   // First update UI from localStorage (instant)
   updateUIFromStorage();
   // Then sync from Supabase and update again (gets cross-device data)
@@ -2924,7 +2903,8 @@ ${merged.goals}
 function clearChat() {
   if (!confirm('Chat-Verlauf löschen?')) return;
   conversationHistory = [];
-  localStorage.removeItem('sc_chat_history');
+  conversationHistory = [];
+  sbUpsert('sc_chat', { messages: [] });
   document.getElementById('messages').innerHTML = '';
   addWelcomeMessage();
 }
@@ -3021,19 +3001,17 @@ function init_real() {
     buildWeekNav(); buildRaceCountdown(); buildPlanPanel(); updateTodayCard();
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
     renderCalendar();
-    // Reload chat from Supabase into UI
-    const syncedChat = (() => { try { return JSON.parse(localStorage.getItem('sc_chat_history')||'[]'); } catch { return []; } })();
-    if (syncedChat.length > conversationHistory.length) {
-      conversationHistory = syncedChat;
-      const msgs = document.getElementById('messages');
-      if (msgs) {
-        msgs.innerHTML = '';
-        syncedChat.forEach(m => {
-          if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0]));
-          else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
-        });
-        msgs.scrollTop = msgs.scrollHeight;
-      }
+    // Render chat from Supabase data
+    const msgs = document.getElementById('messages');
+    if (msgs && conversationHistory.length > 0) {
+      msgs.innerHTML = '';
+      conversationHistory.forEach(m => {
+        if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0]));
+        else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
+      });
+      msgs.scrollTop = msgs.scrollHeight;
+    } else if (conversationHistory.length === 0) {
+      addWelcomeMessage();
     }
     // Auto-refresh Strava AFTER sync so token is guaranteed loaded from Supabase
     const token = localStorage.getItem('sc_access_token');
