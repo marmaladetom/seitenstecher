@@ -56,6 +56,7 @@
 
   /* ─── HEADER ─── */
   header {
+    padding-top: env(safe-area-inset-top, 0px);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -500,12 +501,15 @@
   /* Input area */
   .input-area {
     padding: 12px 16px;
-    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
     position: sticky;
     bottom: 0;
+    /* Extend background into home indicator area */
+    box-shadow: 0 0 0 100vmax var(--surface);
+    clip-path: inset(-100vmax 0 -100vmax 0);
   }
   .input-row {
     display: flex;
@@ -1168,8 +1172,8 @@
     </div>
 
     <!-- Activity Detail Modal -->
-    <div class="modal-overlay" id="actDetailModal" onclick="if(event.target.id==='actDetailModal')closeActDetail()" style="z-index:200;align-items:center;">
-      <div id="actDetailBox" onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:90%;max-width:680px;margin:auto;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="modal-overlay" id="actDetailModal" onclick="if(event.target.id==='actDetailModal')closeActDetail()" style="z-index:200;align-items:center;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);">
+      <div id="actDetailBox" onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:90%;max-width:680px;margin:auto;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
         <!-- Header -->
         <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
@@ -1472,7 +1476,11 @@ const db = {
     } catch(e) { console.log('setWellness error:', e); }
   },
   async deleteWellness(dateStr) { localStorage.removeItem('sc_wellness_'+dateStr); await sbDelete('sc_wellness', { date: `eq.${dateStr}` }); },
-  async setChat(messages) { localStorage.setItem('sc_chat_history', JSON.stringify(messages)); await sbUpsert('sc_chat', { messages }); },
+  async setChat(messages) {
+    const last20 = messages.slice(-20);
+    localStorage.setItem('sc_chat_history', JSON.stringify(last20));
+    await sbUpsert('sc_chat', { messages: last20 });
+  },
   async setStravaCache(activities) { localStorage.setItem('sc_strava_cache', JSON.stringify(activities)); await sbUpsert('sc_strava', { activities }); },
   async syncFromCloud() {
     const badge = document.getElementById('syncBadge');
@@ -1492,7 +1500,14 @@ const db = {
       extras.forEach(r => localStorage.setItem('sc_extra_kw'+r.kw+'_'+r.day, JSON.stringify(r.activities)));
       logs.forEach(r => localStorage.setItem('sc_log_kw'+r.kw+'_'+r.day, JSON.stringify({ dist: r.dist, time: r.time_min, hr: r.hr, pace: r.pace, note: r.note })));
       wellness.forEach(r => localStorage.setItem('sc_wellness_'+r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date })));
-      if (chat[0] && chat[0].messages && chat[0].messages.length) localStorage.setItem('sc_chat_history', JSON.stringify(chat[0].messages));
+      if (chat[0] && chat[0].messages && chat[0].messages.length) {
+        const localChat = (() => { try { return JSON.parse(localStorage.getItem('sc_chat_history')||'[]'); } catch { return []; } })();
+        const cloudChat = chat[0].messages.slice(-20);
+        // Cloud wins if it has more or equal messages
+        if (cloudChat.length >= localChat.length) {
+          localStorage.setItem('sc_chat_history', JSON.stringify(cloudChat));
+        }
+      }
       if (stravaRows[0]) {
         if (stravaRows[0].access_token && !stravaToken) {
           stravaToken = stravaRows[0].access_token;
@@ -1538,7 +1553,7 @@ const TRAINING_PLAN = {
   },
   races: [
     { name: "Marathon München", date: "2026-04-19", goal: "ERLEDIGT · 4:28h", color: "#555", done: true },
-    { name: "Wings for Life Munich", date: "2026-05-10", goal: "B · Fun", color: "#e8ff47" },
+    { name: "Wings for Life Munich", date: "2026-05-10", goal: "B · Fun", color: "#e8ff47", done: true },
     { name: "Triathlon OD Landshut", date: "2026-06-28", goal: "B · 1,5/40/10km", color: "#4a9eff" },
     { name: "Ironman 70.3 Duisburg", date: "2026-08-16", goal: "A · Sub 6:00h", color: "#fc4c02" },
     { name: "Tegernsee Halbmarathon", date: "2026-09-20", goal: "B · Fun", color: "#3ecf6e" },
@@ -2063,6 +2078,19 @@ function init() {
     updateTodayCard();
     renderCalendar();
     if (typeof renderWellness === 'function' && currentTab === 'wellness') renderWellness();
+    // Reload chat from synced localStorage (may have cloud messages now)
+    const syncedChat = (() => { try { return JSON.parse(localStorage.getItem('sc_chat_history')||'[]'); } catch { return []; } })();
+    if (syncedChat.length > conversationHistory.length) {
+      conversationHistory = syncedChat;
+      const msgs = document.getElementById('messages');
+      if (msgs) {
+        msgs.innerHTML = '';
+        conversationHistory.forEach(m => {
+          if (m.role === 'user') appendMsg('user', escHtml(m.content.split('\n\n[')[0]));
+          else if (m.role === 'assistant') appendMsg('coach', formatReply(m.content));
+        });
+      }
+    }
   });
 }
 
@@ -2148,10 +2176,10 @@ function buildRaceCountdown() {
   TRAINING_PLAN.races.forEach(race => {
     const raceDate = new Date(race.date);
     const diff = Math.ceil((raceDate - now) / (1000 * 60 * 60 * 24));
-    if (diff < -30) return;
+    if (diff < -1 && !race.done) return; // hide non-done races older than 1 day
     const item = document.createElement('div');
     item.className = 'race-item';
-    const diffText = race.done ? 'erledigt' : diff <= 0 ? 'heute!' : diff + 'd';
+    const diffText = race.done ? 'erledigt' : diff === 0 ? 'heute!' : diff < 0 ? 'vorbei' : diff + 'd';
     const opacity = race.done ? 'opacity:0.45;' : '';
     item.innerHTML = `
       <div style="${opacity}">
