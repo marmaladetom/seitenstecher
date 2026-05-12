@@ -1512,6 +1512,8 @@ const db = {
       extras.forEach(r => localStorage.setItem('sc_extra_kw'+r.kw+'_'+r.day, JSON.stringify(r.activities)));
       logs.forEach(r => localStorage.setItem('sc_log_kw'+r.kw+'_'+r.day, JSON.stringify({ dist: r.dist, time: r.time_min, hr: r.hr, pace: r.pace, note: r.note })));
       wellness.forEach(r => localStorage.setItem('sc_wellness_'+r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date })));
+      // Populate wellness cache for coach system prompt
+      _wellnessCache = wellness.map(r => ({ date: r.date, hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours })).filter(r => r.hrv || r.sleep || r.sleepH);
       if (chat[0] && chat[0].messages && chat[0].messages.length) {
         conversationHistory = chat[0].messages.slice(-20);
       }
