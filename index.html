@@ -1944,44 +1944,21 @@ function buildCurrentWeekContext() {
   return { currentWeekText, nextWeekText };
 }
 
-const SYSTEM_PROMPT_BASE = `REGEL 1 — DATUM: Du bekommst zu Beginn jeder Unterhaltung eine Datumsbestätigung. Rechne Wochentage NIEMALS selbst aus. Verwende ausschliesslich die dort genannten Werte.
-REGEL 2 — PLAN: Verwende ausschliesslich die unten aufgeführten wochenspezifischen Einheiten. NICHT die allgemeine Wochenstruktur.
+const SYSTEM_PROMPT_BASE = `Seitenstecher Coach für Tom. Deutsch. Präzise, keine Floskeln.
 
-Du bist "Seitenstecher Coach" — präziser Trainingscoach für Tom. Direkt, konkrete Zahlen, kein Geschwätz.
+PROFIL: 26J · 83kg · 186cm · HFmax 199 · LT 174bpm@4:13/km · RHR 51 · VO2max ~66
+PRs: Marathon 4:28h · HM 1:54h · 10k@4:39/km
 
-ATHLETENPROFIL:
-Alter 26 · 83kg · 186cm · HFmax 199bpm
-Laktatschwelle: 174bpm @ 4:13/km (Diagnostik Hugo Klein 05.05.26)
-RHR 51 · HRV ~86–91ms · VO2max ~65–68
-PRs: Marathon 4:28h (04/2026) · HM 1:54h · 10k @ 4:39/km
+ZONEN: Z1 120-139 | Z2 140-162 (Easy) | Z3 163-170 | Z4 171-177 (Schwelle) | Z5 178-191 (Intervalle)
 
-PULSZONEN (Leistungsdiagnostik 05.05.26):
-Z1/KB:  120–139bpm | >6:50/km
-Z2/GA1: 140–162bpm | 5:50–6:49/km  (Easy/Long Runs)
-Z3/GA2: 163–170bpm | 4:44–5:49/km  (Tempoläufe)
-Z4/EB:  171–177bpm | 4:01–4:43/km  (Schwelle)
-Z5/VO2: 178–191bpm | 3:44–4:00/km  (Intervalle)
-Z6/SB:  >191bpm    | <3:43/km
+WETTKÄMPFE: 28.06 Tri Landshut (B) · 16.08 70.3 Duisburg (A, Sub 6h) · 20.09 Tegernsee HM · ~08.11 Backyard (A)
+GYM: Mo Push · Mi Lower · Fr Pull · Sa Upper
 
-WETTKÄMPFE 2026:
-10.05 Wings for Life Munich (B)
-28.06 Triathlon OD Landshut (B, 1,5/40/10km)
-16.08 Ironman 70.3 Duisburg (A, Sub 6h: Swim ~40min / Bike ~3h / Run ~2h)
-20.09 Tegernsee HM (B)
-~08.11 Backyard Projekt (A, 50–100km, 6,7km Runden)
+REGELN: HRV<70=nur Z1/Z2 | Sleep<65+HRV<80=Warnung | Datum NIEMALS selbst rechnen | Plan NUR aus Wochenplan unten
 
-GYM: Mo Push A | Mi Lower (Squat/RDL/Beinpresse) | Fr Pull | Sa Upper
-
-REGELN:
-- HRV <70ms = nur Z1/Z2, kein Tempo
-- Shin Splints >3/10 = Einheit abbrechen
-- Tom ist aktiver Schläfer: Sleep 70–80 = neutral; Warnung NUR bei <65 UND HRV <80ms gleichzeitig
-- Strava-Daten immer gegen Zonen und Plan analysieren
-- Antwort auf Deutsch, präzise
-
-PLAN-ÄNDERUNGEN: Wenn Tom eine Einheit ändern möchte, antworte normal UND füge am Ende einen Block ein:
+PLAN-ÄNDERUNGEN: Normal antworten + Block:
 <planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}<\/planchange>
-Verwende exakt dieses Format. kw=Kalenderwoche (Zahl), day=Mo/Di/Mi/Do/Fr/Sa/So, type=run/bike/swim/gym/rest/race/brick. Nur einfügen wenn Tom explizit eine Änderung wünscht.`;
+Nur wenn Tom explizit ändert. kw=Zahl, day=Mo/Di/Mi/Do/Fr/Sa/So, type=run/bike/swim/gym/rest/race/brick.`;
 
 let _wellnessCache = []; // populated from Supabase on startup
 
@@ -2652,7 +2629,7 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 2048,
+        max_tokens: 1200,
         system: SYSTEM_PROMPT(),
         messages
       })
@@ -3880,7 +3857,7 @@ function getISOWeek(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
 }
 
-function analyzeCurrentActivity() {
+async function analyzeCurrentActivity() {
   if (!currentDetailActivity) return;
   const act = currentDetailActivity;
   const dist = (act.distance/1000).toFixed(2);
@@ -3888,37 +3865,50 @@ function analyzeCurrentActivity() {
   const pace = act.type === 'Run' ? formatPace(act.moving_time, act.distance) : null;
   const hr = act.average_heartrate ? Math.round(act.average_heartrate) : null;
 
-  // Find the plan entry for the activity's date (not today)
+  // Find plan for activity date
   const actDate = new Date(act.start_date_local || act.start_date);
-  const actDateStr = actDate.toISOString().slice(0,10);
   const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
   const dayKey = dayNames[actDate.getDay()];
   const kwNum = getISOWeek(actDate);
-
-  // Find matching week in plan
   let planContext = '';
   for (const w of TRAINING_PLAN.weeks) {
     const wStart = new Date(w.dateFrom);
     const wEnd = new Date(wStart); wEnd.setDate(wEnd.getDate()+6);
     if (actDate >= wStart && actDate <= wEnd) {
       const eff = getEffectiveEntry(w.kw, dayKey) || w.days[dayKey];
-      if (eff) {
-        planContext = `
-
-PLAN FÜR DIESEN TAG (${dayKey} KW${w.kw}): ${eff.icon} ${eff.label}${eff.detail ? ' | ' + eff.detail : ''}`;
-      } else {
-        planContext = `
-
-PLAN FÜR DIESEN TAG (${dayKey} KW${w.kw}): Ruhe/kein Eintrag`;
-      }
+      planContext = eff ? eff.icon+' '+eff.label+(eff.detail?' | '+eff.detail:'') : 'Ruhe';
       break;
     }
   }
 
-  const dateStr = actDate.toLocaleDateString('de', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
-  const msg = `Analysiere diese Strava-Aktivität: ${act.name} am ${dateStr} (${dayKey} KW${kwNum}), ${dist}km in ${time}${pace?' @ '+pace+'/km':''}${hr?' Ø'+hr+' bpm':''}.${planContext}
+  // Load laps and summarize compactly
+  let lapSummary = '';
+  const token = localStorage.getItem('sc_access_token');
+  if (token) {
+    try {
+      await maybeRefreshStravaToken();
+      const freshToken = localStorage.getItem('sc_access_token');
+      const res = await fetch(`https://www.strava.com/api/v3/activities/${act.id}/laps`, {
+        headers: { Authorization: `Bearer ${freshToken}` }
+      });
+      if (res.ok) {
+        const laps = await res.json();
+        if (laps.length > 1) {
+          const isRun = act.type === 'Run';
+          const lines = laps.map((l, i) => {
+            const p = isRun && l.average_speed ? formatPace(l.elapsed_time, l.distance) : null;
+            const h = l.average_heartrate ? Math.round(l.average_heartrate) : null;
+            const d = l.distance ? (l.distance/1000).toFixed(2) : '';
+            return 'L'+(i+1)+':'+d+'km'+(p?' @'+p+'/km':'')+(h?' '+h+'bpm':'');
+          }).join(' | ');
+          lapSummary = '\nLaps: '+lines;
+        }
+      }
+    } catch(e) {}
+  }
 
-Bitte vergleiche NUR mit dem Plan dieses Tages (${dayKey} KW${kwNum}), nicht mit dem heutigen Tag.`;
+  const dateStr = actDate.toLocaleDateString('de', {weekday:'short', day:'2-digit', month:'2-digit'});
+  const msg = 'Analysiere: '+act.name+' '+dateStr+' KW'+kwNum+' | '+dist+'km '+time+(pace?' @'+pace+'/km':'')+(hr?' Ø'+hr+'bpm':'')+' | Plan: '+planContext+lapSummary;
 
   closeActDetail();
   switchTab('chat', null);
