@@ -2653,7 +2653,7 @@ async function sendMessage() {
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 2048,
-        system: (currentSystemPrompt !== SYSTEM_PROMPT_BASE ? currentSystemPrompt : SYSTEM_PROMPT()),
+        system: SYSTEM_PROMPT(),
         messages
       })
     });
