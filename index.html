@@ -1514,6 +1514,8 @@ const db = {
       wellness.forEach(r => localStorage.setItem('sc_wellness_'+r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours, date: r.date })));
       // Populate wellness cache for coach system prompt
       _wellnessCache = wellness.map(r => ({ date: r.date, hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours })).filter(r => r.hrv || r.sleep || r.sleepH);
+      // Rebuild system prompt now that wellness data is available
+      currentSystemPrompt = SYSTEM_PROMPT();
       if (chat[0] && chat[0].messages && chat[0].messages.length) {
         conversationHistory = chat[0].messages.slice(-20);
       }
