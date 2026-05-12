@@ -1954,7 +1954,7 @@ ZONEN: Z1 120-139 | Z2 140-162 (Easy) | Z3 163-170 | Z4 171-177 (Schwelle) | Z5 
 WETTKÄMPFE: 28.06 Tri Landshut (B) · 16.08 70.3 Duisburg (A, Sub 6h) · 20.09 Tegernsee HM · ~08.11 Backyard (A)
 GYM: Mo Push · Mi Lower · Fr Pull · Sa Upper
 
-REGELN: HRV<70=nur Z1/Z2 | Sleep<65+HRV<80=Warnung | Datum NIEMALS selbst rechnen | Plan NUR aus Wochenplan unten
+REGELN: HRV<70=nur Z1/Z2 | Sleep<65+HRV<80=Warnung | Datum NIEMALS selbst rechnen | Plan NUR aus Wochenplan unten | Antworten max 150 Wörter, niemals abschneiden — lieber kürzer als unvollständig
 
 PLAN-ÄNDERUNGEN: Normal antworten + Block:
 <planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}<\/planchange>
@@ -2629,7 +2629,7 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1200,
+        max_tokens: 1500,
         system: SYSTEM_PROMPT(),
         messages
       })
