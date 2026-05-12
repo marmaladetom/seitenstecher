@@ -1998,7 +1998,7 @@ async function loadWellnessToLocalStorage() {
   try {
     const rows = await sbGet('sc_wellness', { user_id: `eq.${SB_USER}`, order: 'date.desc', limit: '14' });
     rows.forEach(r => {
-      localStorage.setItem('sc_wellness_' + r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep, sleepH: r.sleep_h }));
+      localStorage.setItem('sc_wellness_' + r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours }));
     });
   } catch(e) { console.log('wellness load error:', e); }
 }
