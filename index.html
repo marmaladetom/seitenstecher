@@ -140,7 +140,7 @@
     .msg-bubble { max-width: 90%; font-size: 13px; }
     .tab { font-size: 10px; padding: 6px 8px; white-space: nowrap; }
     .modal-box { width: 95vw; max-width: unset; padding: 16px; }
-    .input-area { padding: 10px 12px calc(20px + env(safe-area-inset-bottom, 0px)); }
+    .input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); }
     .hint-chip { font-size: 10px; padding: 3px 8px; }
     .send-btn { width: 38px; height: 38px; }
     /* Progress tab mobile */
@@ -1980,8 +1980,9 @@ PLAN-ÄNDERUNGEN: Wenn Tom eine Einheit ändern möchte, antworte normal UND fü
 Verwende exakt dieses Format. kw=Kalenderwoche (Zahl), day=Mo/Di/Mi/Do/Fr/Sa/So, type=run/bike/swim/gym/rest/race/brick. Nur einfügen wenn Tom explizit eine Änderung wünscht.`;
 
 function getRecentWellness() {
+  // Read from localStorage (wellness is saved there by initWellness)
   const days = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0,10);
     const w = (() => { try { return JSON.parse(localStorage.getItem('sc_wellness_'+key)||'null'); } catch { return null; } })();
@@ -1990,6 +1991,16 @@ function getRecentWellness() {
     }
   }
   return days;
+}
+
+async function loadWellnessToLocalStorage() {
+  // Load wellness from Supabase into localStorage so getRecentWellness can read it
+  try {
+    const rows = await sbGet('sc_wellness', { user_id: `eq.${SB_USER}`, order: 'date.desc', limit: '14' });
+    rows.forEach(r => {
+      localStorage.setItem('sc_wellness_' + r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep, sleepH: r.sleep_h }));
+    });
+  } catch(e) { console.log('wellness load error:', e); }
 }
 
 function SYSTEM_PROMPT() {
@@ -2110,6 +2121,8 @@ function init() {
         renderCalendar();
       });
     }
+    // Load wellness data so coach can access it
+    loadWellnessToLocalStorage();
     // Render chat LAST
     const msgs = document.getElementById('messages');
     if (msgs) {
@@ -2146,12 +2159,13 @@ function updateStravaBadge(connected) {
 function getTodayEntry() {
   const dayKeys = ['So','Mo','Di','Mi','Do','Fr','Sa'];
   const todayKey = dayKeys[new Date().getDay()];
-  const todayStr = new Date().toISOString().slice(0,10);
   for (const w of TRAINING_PLAN.weeks) {
     const start = new Date(w.dateFrom);
     const end = new Date(start); end.setDate(end.getDate()+6);
     if (new Date() >= start && new Date() <= end) {
-      return { entry: w.days[todayKey] || null, dayKey: todayKey, week: w };
+      // Use getEffectiveEntry to respect plan edits
+      const entry = getEffectiveEntry(w.kw, todayKey) || w.days[todayKey] || null;
+      return { entry, dayKey: todayKey, week: w };
     }
   }
   return { entry: null, dayKey: todayKey, week: null };
