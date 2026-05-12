@@ -1979,24 +1979,22 @@ PLAN-ÄNDERUNGEN: Wenn Tom eine Einheit ändern möchte, antworte normal UND fü
 <planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}<\/planchange>
 Verwende exakt dieses Format. kw=Kalenderwoche (Zahl), day=Mo/Di/Mi/Do/Fr/Sa/So, type=run/bike/swim/gym/rest/race/brick. Nur einfügen wenn Tom explizit eine Änderung wünscht.`;
 
+let _wellnessCache = []; // populated from Supabase on startup
+
 function getRecentWellness() {
-  // Read from localStorage (wellness is saved there by initWellness)
-  const days = [];
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0,10);
-    const w = (() => { try { return JSON.parse(localStorage.getItem('sc_wellness_'+key)||'null'); } catch { return null; } })();
-    if (w && (w.hrv || w.sleep || w.sleepH)) {
-      days.push({ date: key, ...w });
-    }
-  }
-  return days;
+  return _wellnessCache;
 }
 
 async function loadWellnessToLocalStorage() {
-  // Load wellness from Supabase into localStorage so getRecentWellness can read it
   try {
     const rows = await sbGet('sc_wellness', { user_id: `eq.${SB_USER}`, order: 'date.desc', limit: '14' });
+    _wellnessCache = rows.map(r => ({
+      date: r.date,
+      hrv: r.hrv,
+      sleep: r.sleep_score,
+      sleepH: r.sleep_hours
+    })).filter(r => r.hrv || r.sleep || r.sleepH);
+    // Also write to localStorage for initWellness charts
     rows.forEach(r => {
       localStorage.setItem('sc_wellness_' + r.date, JSON.stringify({ hrv: r.hrv, sleep: r.sleep_score, sleepH: r.sleep_hours }));
     });
@@ -2043,19 +2041,20 @@ function getSavedClientSecret() { return localStorage.getItem('sc_client_secret'
 
 // ─── INIT ───
 function updateHRVSidebar() {
-  // Calculate 7-day HRV average from wellness data
+  // Use _wellnessCache (from Supabase) or localStorage as fallback
   const vals = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const key = 'sc_wellness_' + d.toISOString().slice(0,10);
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      const e = JSON.parse(raw);
-      if (e.hrv) vals.push(e.hrv);
+  if (_wellnessCache.length > 0) {
+    _wellnessCache.slice(0, 7).forEach(e => { if (e.hrv) vals.push(e.hrv); });
+  } else {
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = 'sc_wellness_' + d.toISOString().slice(0,10);
+      const raw = localStorage.getItem(key);
+      if (raw) { try { const e = JSON.parse(raw); if (e.hrv) vals.push(e.hrv); } catch {} }
     }
   }
   const el = document.getElementById('sb_hrv');
-  if (el) el.textContent = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : '—';
+  if (el) el.textContent = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) + ' ms' : '—';
 }
 
 function updateUIFromStorage() {
@@ -2122,7 +2121,7 @@ function init() {
       });
     }
     // Load wellness data so coach can access it
-    loadWellnessToLocalStorage();
+    loadWellnessToLocalStorage().then(() => updateHRVSidebar());
     // Render chat LAST
     const msgs = document.getElementById('messages');
     if (msgs) {
@@ -2873,7 +2872,7 @@ function updateSidebarStats(p) {
   el('sb_ltpace', p.ltpace || '—');
   el('sb_hrlt',   p.hrlt   || '—');
   el('sb_hrmax',  p.hrmax  || '—');
-  el('sb_hrv',    p.hrv    || '—');
+  // sb_hrv is auto-calculated by updateHRVSidebar() from wellness data
 }
 
 function saveProfile() {
