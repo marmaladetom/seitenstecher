@@ -1549,19 +1549,327 @@ const db = {
 
 // ─── TRAINING PLAN DATA ───
 const TRAINING_PLAN = {
-  profile: {
-    name: "Tom", age: 26, weight: 83, height: 186,
-    hrMax: 199, hrLT: 174, hrZ2: [140, 162], hrRest: 51, hrv: 88,
-    ltPace: "4:13/km", currentPace: "5:00/km", pr10k: "4:39/km", prHM: "1:54h", marathon: "4:28h",
-    zones: {
-      KB:  { lo: 120, hi: 139, paceLo: null,   paceHi: "6:50", label: "Z1 · Kompensation" },
-      GA1: { lo: 140, hi: 162, paceLo: "5:50", paceHi: "6:49", label: "Z2 · Grundlage 1" },
-      GA2: { lo: 163, hi: 170, paceLo: "4:44", paceHi: "5:49", label: "Z3 · Grundlage 2" },
-      EB:  { lo: 171, hi: 177, paceLo: "4:01", paceHi: "4:43", label: "Z4 · Entwicklung/Schwelle" },
-      VO2: { lo: 178, hi: 191, paceLo: "3:44", paceHi: "4:00", label: "Z5 · VO2max" },
-      SB:  { lo: 192, hi: 199, paceLo: null,   paceHi: "3:43", label: "Z6 · Spitze" }
-    }
-  },
+  weeks: [
+    { kw: 17, dateFrom: '2026-04-20', phase: 'Marathon-Erholung', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '😴', type: 'rest', label: 'Ruhe · Mobility', detail: 'Ruhe · Mobility · Ausrollen 10 min' },
+        Di: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe · Ausrollen' },
+        Mi: { icon: '🏋️', type: 'gym', label: 'Gym leicht A', detail: 'Oberkörper 60% · kein Bein' },
+        Do: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe' },
+        Fr: { icon: '🏋️', type: 'gym', label: 'Gym leicht B', detail: 'Oberkörper + Stabi · 60%' },
+        Sa: { icon: '🏋️', type: 'gym', label: 'Gym leicht C', detail: 'Optional · leicht' },
+        So: { icon: '🏃', type: 'run', label: 'Easy Run 5 km', detail: 'KB · >6:50/km · Puls <139 · Shin Check' },
+      }
+    },
+    { kw: 18, dateFrom: '2026-04-27', phase: 'Marathon-Erholung', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: 'Brust · Schulter · Trizeps · moderat' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 10 km', detail: 'KB–GA1 · 6:30–7:00/km · 130–150 bpm · Shin Check' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m', detail: '6x250m · Pause 30s · Technik' },
+        Do: { icon: '🏋️', type: 'gym', label: 'Gym Pull + Tempolauf 12 km', detail: 'Gym Pull morgens · 2km WU + 8km @ GA2 5:25–5:45/km + 2km CD' },
+        Fr: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · Rear Delt' },
+        Sa: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 90 min', detail: 'Schwimmen locker · Rad GA1 · 28km/h · aerob' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 16 km', detail: 'GA1 · 6:00–6:30/km · 148–162 bpm' },
+      }
+    },
+    { kw: 19, dateFrom: '2026-05-04', phase: 'Diagnostik & Wings for Life', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe' },
+        Di: { icon: '🏆', type: 'race', label: 'Leistungsdiagnostik', detail: 'Schwelle 4:13/km · 174 bpm · VO2max ~67–70' },
+        Mi: { icon: '🏃', type: 'run', label: 'Z2 Lauf 5 km', detail: 'optional · GA1 · 5:50–6:05/km · nach Diagnostik' },
+        Do: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: 'Nach Diagnostik · moderat' },
+        Fr: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · Rear Delt · morgens' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Easy Run 6–8 km + Rad 30–45 min', detail: 'Easy Run KB–GA1 · neue Zonen · Rad KB sehr locker Aktivierung' },
+        So: { icon: '🏆', type: 'race', label: 'Wings for Life Munich', detail: 'B-Rennen · locker · nach Gefühl' },
+      }
+    },
+    { kw: 20, dateFrom: '2026-05-11', phase: 'Triathlon Aufbau I', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: 'Brust · Schulter · Trizeps · 3x5 · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 10x400m', detail: 'VO2 · 3:44–3:55/km · 200m Gehpause · 2km WU+CD · ~12km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 60 min', detail: 'Swim 6x250m Pause 20s morgens · Rad GA1 locker nachmittags' },
+        Do: { icon: '🏋️', type: 'gym', label: 'Gym Pull + Tempolauf 12 km', detail: 'Gym Pull morgens · 2km WU + 8km @ GA2 5:25–5:45/km + 2km CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 90 min + Schwimmen 1500m', detail: 'Rad GA1 · 28km/h · aerob · Swim 5x300m nachmittags' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 20 km', detail: 'GA1 · 5:55–6:20/km · 148–162 bpm' },
+      }
+    },
+    { kw: 21, dateFrom: '2026-05-18', phase: 'Triathlon Aufbau I', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · Rear Delt · Face Pulls · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 8x600m', detail: 'EB–VO2 · 3:45–4:05/km · 200m Gehpause · ~13km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 90 min', detail: 'Swim 5x300m Pause 30s morgens · Rad GA1 28km/h nachmittags' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 10 km', detail: 'GA1 · 5:55–6:20/km · 148–158 bpm · locker' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 60 min + Run 8 km', detail: 'Rad GA1 · Run GA2 5:25–5:45/km · Swim 1500m nach Brick' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 22 km', detail: 'GA1 · 5:55–6:20/km · 148–162 bpm' },
+      }
+    },
+    { kw: 22, dateFrom: '2026-05-25', phase: 'Triathlon Aufbau I', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: '70% · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 8x400m', detail: 'VO2 · 3:44–3:55/km · ~10km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 75 min', detail: 'Swim locker Technik morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 10 km', detail: '2km WU · 6km @ GA2 5:25–5:45/km · 2km CD · kurz & scharf' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 75 min + Schwimmen 1500m', detail: 'Rad GA1 locker · Swim locker' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 16 km', detail: 'GA1 · 6:05–6:30/km · 145–162 bpm' },
+      }
+    },
+    { kw: 23, dateFrom: '2026-06-01', phase: 'Triathlon Aufbau II', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · Face Pulls · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 6x1000m', detail: 'EB · 4:05–4:20/km · 400m Traben · ~14km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 2000m + Rad 2h', detail: 'Swim 4x500m Pause 45s morgens · Rad GA2 28–30km/h' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · 5:55–6:15/km · 148–158 bpm · aerob locker' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 70 min + Run 10 km', detail: 'Rad GA1 · Run GA2 5:25–5:45/km · Swim 1500m nach Brick' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 24 km', detail: 'GA1 · 5:50–6:15/km · 148–162 bpm' },
+      }
+    },
+    { kw: 24, dateFrom: '2026-06-08', phase: 'Triathlon Aufbau II', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: '3x5 schwer · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 5x1200m', detail: 'EB · 4:10–4:25/km · 400m Traben · ~14km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 2000m + Rad 2:30h', detail: 'Swim am Stück offenes Gewässer morgens · Rad GA2 ~70km' },
+        Do: { icon: '🏃', type: 'run', label: 'Schwellenläufe 3x2000m', detail: 'EB · 4:10–4:25/km · 400m Traben Pause · 2km WU+CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 40km + Run 10km', detail: 'Wettkampfsimulation OD · GA2 · Swim 1500m locker nach Brick' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 20 km', detail: 'GA1 · 5:55–6:20/km' },
+      }
+    },
+    { kw: 25, dateFrom: '2026-06-15', phase: 'Taper Landshut', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: '60% · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 8 km + 6x100m Strides', detail: 'GA1 · locker · Strides' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 30 min', detail: 'Swim locker Vertrauen morgens · Rad KB sehr locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 6 km', detail: 'KB · sehr locker · Beine frisch' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🏊', type: 'swim', label: 'Ruhe + Swim 600m optional', detail: 'Ruhe · Kohlenhydrate · Schlafen · Swim optional Locker Aktivierung' },
+        So: { icon: '🏆', type: 'race', label: 'Triathlon Landshut OD', detail: 'B-Rennen · 1,5/40/10km · nach Gefühl' },
+      }
+    },
+    { kw: 26, dateFrom: '2026-06-22', phase: '70.3 Aufbau I', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: '3x5 · morgens · Wiedereinstieg' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · 145–155 bpm · Erholung' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker morgens · Rad GA1 28km/h' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 14 km', detail: '2km WU · 10km @ GA2 5:20–5:40/km · 2km CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 2:30h + Schwimmen 2000m', detail: 'Rad GA1 ~70km · Swim 4x500m nachmittags' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 20 km', detail: 'GA1 · 5:55–6:20/km · 148–162 bpm' },
+      }
+    },
+    { kw: 27, dateFrom: '2026-06-29', phase: '70.3 Aufbau I', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 10x400m', detail: 'VO2 · 3:44–3:55/km · ~12km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 2000m + Rad 2:30h', detail: 'Swim 4x500m Pause 45s morgens · Rad GA2 ~70km' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · 5:55–6:15/km · 148–158 bpm · locker' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 80km + Run 10km', detail: 'Rad 28–30km/h · Run GA2 5:25–5:45/km · Swim 2000m nach Brick' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 24 km', detail: 'GA1 · 5:50–6:15/km · 148–162 bpm' },
+      }
+    },
+    { kw: 28, dateFrom: '2026-07-06', phase: '70.3 Aufbau I', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: '70% · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 8x400m', detail: 'VO2 · 3:44–3:55/km · ~10km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 90 min', detail: 'Swim locker See-Schwimmen zählt morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 10 km', detail: '2km WU · 6km @ GA2 5:20–5:40/km · 2km CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 90 min + Schwimmen 1500m', detail: 'Rad GA1 locker · Swim locker' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 18 km', detail: 'GA1 · 6:00–6:25/km · 151–157 bpm' },
+      }
+    },
+    { kw: 29, dateFrom: '2026-07-13', phase: '70.3 Aufbau II Peak', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 6x1000m', detail: 'EB · 4:05–4:15/km · 400m Traben · ~14km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1900m + Rad 3h', detail: 'Swim 70.3 Distanz am Stück morgens · Rad ~85km GA2' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 14 km', detail: 'GA1 · 5:55–6:15/km · 148–158 bpm · locker' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 90km + Run 12km', detail: 'Rad 28–30km/h · Run GA2 5:30–5:45/km · wichtigste Einheit der Saison · Swim 1500m optional' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 26 km', detail: 'GA1 · 5:50–6:15/km · 148–162 bpm' },
+      }
+    },
+    { kw: 30, dateFrom: '2026-07-20', phase: '70.3 Aufbau II Peak', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: '3x5 · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 5x1200m', detail: 'EB · 4:10–4:20/km · 400m Traben · ~15km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 2000m + Rad 3h', detail: 'Swim kontinuierlich offenes Gewässer morgens · Rad ~85km Wettkampftempo' },
+        Do: { icon: '🏃', type: 'run', label: 'Schwellenläufe 4x2000m', detail: 'EB · 4:10–4:20/km · 400m Traben · 2km WU+CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 90km + Run 21km', detail: 'VOLLE 70.3 SIMULATION · Rad 28–30km/h · Run GA2 5:35–5:50/km · Swim 1900m Warm-up vor Brick' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 20 km', detail: 'GA1 · locker · Erholung nach Simulation' },
+      }
+    },
+    { kw: 31, dateFrom: '2026-07-27', phase: 'Taper 70.3 Duisburg', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'moderat · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 8x400m', detail: 'VO2 · 3:44–3:55/km · ~10km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker Vertrauen morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 10 km', detail: 'GA1 · locker · 148–158 bpm' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🧱', type: 'brick', label: 'Brick: Rad 50km + Run 8km', detail: 'Wettkampftempo · Feeling testen · Swim 1500m locker nach Brick' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 18 km', detail: 'GA1 · 6:00–6:25/km' },
+      }
+    },
+    { kw: 32, dateFrom: '2026-08-03', phase: 'Taper 70.3 Duisburg', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push', detail: '60% · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 5x400m', detail: 'VO2 · scharf · ~7km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 60 min', detail: 'Swim locker Vertrauen morgens · Rad GA1 locker Aktivierung' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 8 km', detail: '2km WU · 4km @ GA2 · 2km CD · kurz & scharf' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 45 min KB', detail: 'KB · sehr locker · morgens' },
+        So: { icon: '😴', type: 'rest', label: 'Ruhe · Anreise', detail: 'Ruhe · Anreise · mentale Vorbereitung' },
+      }
+    },
+    { kw: 33, dateFrom: '2026-08-10', phase: 'Renntage 70.3 Duisburg', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 5km + 3x100m Strides', detail: 'KB · sehr locker' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 600m + Rad 30 min', detail: 'Swim locker morgens · Rad KB sehr locker morgens' },
+        Do: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · Rear Delt · morgens' },
+        Fr: { icon: '🏃', type: 'run', label: 'Easy Run 3 km', detail: 'Nur Aktivierung' },
+        Sa: { icon: '😴', type: 'rest', label: 'Ruhe · Anreise', detail: 'Ruhe · Essen · Schlafen · Kohlenhydrate maximieren' },
+        So: { icon: '🏆', type: 'race', label: 'IRONMAN 70.3 DUISBURG', detail: 'ZIEL: SUB 6H · Swim ~40min / Bike ~3:00h / Run ~2:00h' },
+      }
+    },
+    { kw: 34, dateFrom: '2026-08-17', phase: 'Tegernsee HM Aufbau', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'morgens · Erholung nach 70.3' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 10 km', detail: 'GA1 · 145–155 bpm · Erholung' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 90 min', detail: 'Swim locker morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 10 km', detail: 'GA1 · 5:55–6:20/km · locker · 148–158 bpm' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 90 min + Schwimmen 1500m', detail: 'Rad GA1 locker · Swim locker nachmittags' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 18 km', detail: 'GA1 · 5:55–6:20/km · 148–162 bpm' },
+      }
+    },
+    { kw: 35, dateFrom: '2026-08-24', phase: 'Tegernsee HM Aufbau', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: '3x5 · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 10x400m', detail: 'VO2 · 3:44–3:55/km · ~12km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Schwellenläufe 4x2000m', detail: 'EB · 4:10–4:25/km · 400m Traben · 2km WU+CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 2h + Schwimmen 1500m', detail: 'Rad GA1 Hügel wenn möglich · Swim nachmittags' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 22 km', detail: 'GA1 · 5:50–6:15/km · 148–162 bpm' },
+      }
+    },
+    { kw: 36, dateFrom: '2026-08-31', phase: 'Tegernsee HM Aufbau', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: '3x5 · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 6x800m', detail: 'EB–VO2 · 3:45–4:05/km · ~13km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker morgens · Rad GA2 Hügel simulieren' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 14 km', detail: 'GA1 · 5:55–6:15/km · locker · Erholung vor Taper' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 2h + Schwimmen 1500m', detail: 'Rad GA2 Hügel · Swim nachmittags' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 24 km', detail: 'GA1 · 5:50–6:15/km · Tegernsee hügelig!' },
+      }
+    },
+    { kw: 37, dateFrom: '2026-09-07', phase: 'Taper Tegernsee', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push', detail: '60% · morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 6x400m', detail: 'VO2 · 3:44–3:55/km · ~9km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 60 min', detail: 'Swim locker morgens · Rad KB locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 10 km', detail: '2km WU · 6km @ GA2 5:20–5:40/km · 2km CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 60 min + Schwimmen 1000m', detail: 'Rad KB sehr locker · Swim locker Vertrauen' },
+        So: { icon: '🏃', type: 'run', label: 'Long Run 14 km', detail: 'GA1 · locker' },
+      }
+    },
+    { kw: 38, dateFrom: '2026-09-14', phase: 'Renntage Tegernsee', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 6km + 4x100m Strides', detail: 'KB · sehr locker' },
+        Mi: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe' },
+        Do: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'Rücken · Bizeps · Rear Delt · morgens' },
+        Fr: { icon: '🏃', type: 'run', label: 'Easy Run 4 km', detail: 'Nur Aktivierung' },
+        Sa: { icon: '😴', type: 'rest', label: 'RUHETAG · Anreise', detail: 'Ruhe · Kohlenhydrate · früh schlafen' },
+        So: { icon: '🏆', type: 'race', label: 'Tegernsee Halbmarathon', detail: 'B-Rennen · hügelig · nach Gefühl · genießen' },
+      }
+    },
+    { kw: 39, dateFrom: '2026-09-21', phase: 'Ultra Aufbau', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · Erholung · 140–155 bpm' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · 5:55–6:15/km · locker · 148–158 bpm' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 2h + Schwimmen 1500m', detail: 'Rad GA1 locker · Swim nachmittags' },
+        So: { icon: '🏃', type: 'ultra', label: 'Long Run 22 km', detail: 'GA1 · 6:00–6:20/km · Zeit auf Beinen ~2:20h' },
+      }
+    },
+    { kw: 40, dateFrom: '2026-09-28', phase: 'Ultra Aufbau', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: 'morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 8x400m', detail: 'VO2 · 3:44–3:55/km · ~10km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 12 km', detail: '2km WU · 8km @ GA2 5:20–5:40/km · 2km CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🏃', type: 'ultra', label: 'Long Run 1: 24 km', detail: 'GA1 · 6:00–6:20/km · Essen/Trinken üben · Swim 1500m optional danach' },
+        So: { icon: '🏃', type: 'ultra', label: 'Long Run 2: 16 km', detail: 'KB · 6:30–7:00/km · müde Beine · Backyard-Training' },
+      }
+    },
+    { kw: 41, dateFrom: '2026-10-05', phase: 'Ultra Aufbau', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 10 km', detail: 'GA1 · locker · Erholung' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 90 min', detail: 'Swim locker morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · 5:55–6:15/km · locker' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🚴', type: 'bike', label: 'Rad 90 min + Schwimmen 1500m', detail: 'Rad GA1 locker · Swim nachmittags' },
+        So: { icon: '🏃', type: 'ultra', label: 'Long Run 20 km', detail: 'GA1 · locker · Erholung' },
+      }
+    },
+    { kw: 42, dateFrom: '2026-10-12', phase: 'Ultra Aufbau', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: 'morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 6x800m', detail: 'EB–VO2 · 3:45–4:05/km · ~12km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2:30h', detail: 'Swim locker morgens · Rad GA2' },
+        Do: { icon: '🏃', type: 'run', label: 'Schwellenläufe 3x2000m', detail: 'EB · 4:10–4:25/km · 400m Traben · 2km WU+CD' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🏃', type: 'ultra', label: 'Long Run 1: 28 km', detail: 'GA1 · 6:10–6:20/km · Nachtlauf-Option · Essen alle 45 min · Swim 1500m optional danach' },
+        So: { icon: '🏃', type: 'ultra', label: 'Long Run 2: 18 km', detail: 'KB · 130–145 bpm · müde Beine · Pace egal' },
+      }
+    },
+    { kw: 43, dateFrom: '2026-10-19', phase: 'Ultra Aufbau Peak', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Pull', detail: 'morgens · frisch halten für Wochenende' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 12 km', detail: 'GA1 · locker · Beine frisch für Sa halten' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 2h', detail: 'Swim locker morgens · Rad GA1 locker' },
+        Do: { icon: '🏃', type: 'run', label: 'Easy Run 14 km', detail: 'GA1 · 5:55–6:15/km · locker · Wochenende schonen' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Kohlenhydrate · früh schlafen' },
+        Sa: { icon: '🏃', type: 'ultra', label: 'Ultra-Simulation: 34 km', detail: 'GA1 · Start ~18 Uhr · 2h im Dunkeln · Essen alle 45 min · Pausen testen' },
+        So: { icon: '🏃', type: 'ultra', label: 'Recovery Run 14 km', detail: 'KB · >6:50/km · wie Backyard-Folgerunde' },
+      }
+    },
+    { kw: 44, dateFrom: '2026-10-26', phase: 'Ultra Taper', doType: 'TEMPO',
+      days: {
+        Mo: { icon: '🏋️', type: 'gym', label: 'Gym Push A', detail: 'morgens' },
+        Di: { icon: '🏃', type: 'run', label: 'Intervalle 6x400m', detail: 'VO2 · 3:44–3:55/km · ~9km' },
+        Mi: { icon: '🏊', type: 'swim', label: 'Schwimmen 1500m + Rad 60 min', detail: 'Swim locker morgens · Rad KB locker aktive Erholung' },
+        Do: { icon: '🏃', type: 'run', label: 'Tempolauf 8 km', detail: '2km WU · 4km @ GA2 · 2km CD · kurz & scharf' },
+        Fr: { icon: '😴', type: 'rest', label: 'RUHETAG', detail: 'Ruhetag fix' },
+        Sa: { icon: '🏃', type: 'ultra', label: 'Long Run 18 km', detail: 'GA1 · locker · letzte längere Einheit' },
+        So: { icon: '😴', type: 'rest', label: 'Ruhe / Mobility', detail: 'Ruhe / Mobility' },
+      }
+    },
+    { kw: 45, dateFrom: '2026-11-02', phase: 'Backyard Projektwoche', doType: 'LOCKER',
+      days: {
+        Mo: { icon: '🏃', type: 'run', label: 'Easy Run 6 km', detail: 'KB · sehr locker · letzte Aktivierung' },
+        Di: { icon: '🏃', type: 'run', label: 'Easy Run 4km + 4x100m Strides', detail: 'Locker · Strides für Spritzigkeit' },
+        Mi: { icon: '😴', type: 'rest', label: 'Ruhe', detail: 'Ruhe' },
+        Do: { icon: '😴', type: 'rest', label: 'Ruhe · Vorbereitung', detail: 'Ruhe · Vorbereitung · Essen einplanen' },
+        Fr: { icon: '😴', type: 'rest', label: 'Ruhe · Material checken', detail: 'Ruhe · Material · Lichter · Kleidung checken' },
+        Sa: { icon: '🏃', type: 'ultra', label: 'BACKYARD PROJEKT', detail: 'Startzeit flexibel · 6,7km/h Runden · Ziel 50–100km · mit Kumpel · Start zu Hause' },
+        So: { icon: '🏃', type: 'ultra', label: 'Backyard Fortsetzung / Erholung', detail: 'Je nach Verlauf der Nacht' },
+      }
+    },
+  ],
   races: [
     { name: "Marathon München", date: "2026-04-19", goal: "ERLEDIGT · 4:28h", color: "#555", done: true },
     { name: "Wings for Life Munich", date: "2026-05-10", goal: "B · Fun", color: "#e8ff47", done: true },
@@ -1569,333 +1877,6 @@ const TRAINING_PLAN = {
     { name: "Ironman 70.3 Duisburg", date: "2026-08-16", goal: "A · Sub 6:00h", color: "#fc4c02" },
     { name: "Tegernsee Halbmarathon", date: "2026-09-20", goal: "B · Fun", color: "#3ecf6e" },
     { name: "Backyard Projekt", date: "2026-11-08", goal: "A · 50–100km", color: "#b47aff" }
-  ],
-  gym: {
-    Mo: { name: "Push A", detail: "Brust · Schulter · Trizeps · schwer" },
-    Mi: { name: "Lower", detail: "Squat · RDL · Beinpresse · Wadenheben · BSS · Leg Curl" },
-    Fr: { name: "Pull", detail: "Rücken · Bizeps · Rear Delt · Face Pulls" },
-    Sa: { name: "Upper", detail: "Oberkörper gesamt · leichter als Mo · Stabi" }
-  },
-  weeks: [
-    { kw: 17, phase: "Marathon-Erholung", dateFrom: "2026-04-20", laufVol: "~5 km", note: "Komplette Erholung. Kein Lauf vor So 25.04. Aktive Regeneration, Mobility, leichtes Gym.",
-      days: {
-        Mo: { type: "rest",  icon: "😴", label: "Ruhe · Mobility", detail: "Ausrollen / Mobility 10 min", done: true },
-        Di: { type: "rest",  icon: "😴", label: "Ruhe", detail: "", done: true },
-        Mi: { type: "gym",   icon: "🏋️", label: "Gym leicht A", detail: "Oberkörper 60% · kein Bein · kein Muskelversagen", done: true },
-        Do: { type: "rest",  icon: "😴", label: "Ruhe", detail: "", done: true },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym leicht B", detail: "Oberkörper + Stabi · 60%", done: true },
-        Sa: { type: "gym",   icon: "🏋️", label: "Gym leicht C", detail: "Leicht · optional", done: true },
-        So: { type: "run",   icon: "🏃", label: "Easy Run 5 km", detail: "KB · >6:50/km · Puls 120–139 · Shin Splints Check", done: true }
-      }
-    },
-    { kw: 18, phase: "Marathon-Erholung", dateFrom: "2026-04-27", laufVol: "~35 km", note: "Erster vollständiger Block. Shin Splints beobachten.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "Brust · Schulter · Trizeps · moderat", done: true },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 10 km", detail: "KB–GA1 · 6:30–7:00/km · Puls 130–150 · Shin Splints Check", done: true },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m", detail: "Squat · RDL · Beinpresse · + 6x250m Technik", done: true },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km", detail: "2km WU · 8km @ GA2 5:25–5:45/km · 2km CD", done: true },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "Rücken · Bizeps · Rear Delt", done: true },
-        Sa: { type: "gym+swim", icon: "🏋️", label: "Gym Upper + Swim 1500m", detail: "Oberkörper gesamt · leichter · + Locker Technik", done: true },
-        So: { type: "run",   icon: "🏃", label: "Long Run 16 km", detail: "GA1 · 6:00–6:30/km · Puls 148–162", done: true }
-      }
-    },
-    { kw: 19, phase: "Diagnostik & Wings for Life", dateFrom: "2026-05-04", laufVol: "~25 km", note: "Leistungsdiagnostik Di 05.05. Zonen ab sofort angepasst. Wings for Life So 10.05.",
-      days: {
-        Mo: { type: "rest",    icon: "😴", label: "Ruhe", detail: "", done: true },
-        Di: { type: "race",    icon: "🔬", label: "Leistungsdiagnostik", detail: "Schwelle 3:52/km · 176 bpm · Z2 bis 162 bpm · VO2max ~65–68", done: true },
-        Mi: { type: "gym",     icon: "🏋️", label: "Gym Push A", detail: "Nach Diagnostik", done: false },
-        Do: { type: "gym",     icon: "🏋️", label: "Gym Pull", detail: "Rücken · Bizeps · Rear Delt · Face Pulls", done: false },
-        Fr: { type: "run",     icon: "🏃", label: "Easy Run 6–8 km", detail: "KB–GA1 · Puls 140–158 · neue Zonen", done: false },
-        Sa: { type: "bike",    icon: "🚴", label: "Rad 30–45 min", detail: "KB · sehr locker · Aktivierung vor WfL", done: false },
-        So: { type: "race",    icon: "🏁", label: "Wings for Life Munich", detail: "B-Rennen · locker · nach Gefühl · kein Heroismus", done: false }
-      }
-    },
-    { kw: 20, phase: "Triathlon Aufbau I", dateFrom: "2026-05-11", laufVol: "~48 km", note: "Erster voller MAX-Block mit offiziellen Zonen.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "Brust · Schulter · Trizeps" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 10x400m", detail: "VO2 · 3:44–3:55/km · 200m Gehpause · 2km WU+CD · Total ~12km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m", detail: "Squat · RDL · BSS + 6x250m Pause 20s" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 14 km", detail: "2km WU · 10km @ GA2 5:25–5:45/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "Rücken · Bizeps · Rear Delt · Face Pulls" },
-        Sa: { type: "gym+swim", icon: "🏋️", label: "Gym Upper + Swim 2000m", detail: "Oberkörper + 4x500m Pause 45s" },
-        So: { type: "run+bike", icon: "🚴", label: "Rad 2h + Long Run 20 km", detail: "Rad GA1 28km/h + GA1 Puls 148–162" }
-      }
-    },
-    { kw: 21, phase: "Triathlon Aufbau I", dateFrom: "2026-05-18", laufVol: "~55 km", note: "Volumen steigern. Erster Brick. ~14–16h/Woche.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "Brust · Schulter · Trizeps" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 8x600m", detail: "EB–VO2 · 3:45–4:05/km · 200m Gehpause · Total ~13km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m", detail: "Squat · RDL · Leg Curl + 5x300m Pause 30s" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 16 km", detail: "2km WU · 12km @ GA2 5:25–5:45/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "Rücken · Bizeps · Rear Delt" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper + Brick: Rad 60min + Run 8km", detail: "Rad GA2 + Run GA2 5:25–5:45/km + Swim 2000m kontinuierlich" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 22 km", detail: "GA1 · 5:55–6:20/km · Puls 148–162" }
-      }
-    },
-    { kw: 22, phase: "Triathlon Aufbau I", dateFrom: "2026-05-25", laufVol: "~40 km", note: "Regenerationswoche · -25% Laufvolumen.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A leicht", detail: "70%" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 8x400m", detail: "VO2 · 3:44–3:55/km · Total ~10km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower leicht + Swim 1500m", detail: "70% · kein Versagen + Locker Technik" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km", detail: "2km WU · 8km @ GA2 5:30/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull leicht", detail: "70%" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 75 min", detail: "Leicht + GA1 locker" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 16 km", detail: "GA1 · 6:05–6:30/km · Puls 145–162" }
-      }
-    },
-    { kw: 23, phase: "Triathlon Aufbau II", dateFrom: "2026-06-01", laufVol: "~60 km", note: "Intensivierung. Rad 2–2:30h. Swim 2000m+. ~15–17h/Woche.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 6x1000m", detail: "EB · 4:05–4:20/km · 400m Traben · Total ~14km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 2000m", detail: "Squat · RDL · BSS + 4x500m Pause 45s" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 16 km", detail: "2km WU · 12km @ GA2 5:20–5:40/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper + Brick: Rad 70min + Run 10km", detail: "Rad GA2 + Run GA2 5:25–5:45/km + Swim 2000m Wettkampftempo" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 24 km", detail: "GA1 · 5:50–6:15/km · Puls 148–162" }
-      }
-    },
-    { kw: 24, phase: "Triathlon Aufbau II", dateFrom: "2026-06-08", laufVol: "~65 km", note: "Peak-Woche vor Landshut. Höchstes Volumen bisher. ~16–18h/Woche.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 5x1200m", detail: "EB · 4:10–4:25/km · 400m Traben · Total ~14km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 2000m", detail: "Am Stück · offenes Gewässer simulieren" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 18 km", detail: "2km WU · 14km @ GA2 5:20–5:40/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper + Brick: Rad 40km + Run 10km", detail: "Wettkampfsimulation OD + Swim 1500m locker" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 20 km", detail: "GA1 · 5:55–6:20/km" }
-      }
-    },
-    { kw: 25, phase: "Taper Landshut OD", dateFrom: "2026-06-15", laufVol: "~28 km", note: "Taper Landshut. Volumen -40%. B-Rennen So.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push leicht 60%", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 8km + 6x100m Strides", detail: "GA1 · locker · Strides für Spritzigkeit" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Pull leicht + Swim 1500m", detail: "60% + Locker Vertrauen" },
-        Do: { type: "run",   icon: "🏃", label: "Easy Run 6 km", detail: "KB · sehr locker" },
-        Fr: { type: "bike",  icon: "🚴", label: "Rad 30 min", detail: "Sehr locker · Aktivierung" },
-        Sa: { type: "rest",  icon: "😴", label: "Ruhe", detail: "Kohlenhydrate · Schlaf" },
-        So: { type: "race",  icon: "🏁", label: "Triathlon OD Landshut", detail: "B-Rennen · 1,5/40/10km · nach Gefühl" }
-      }
-    },
-    { kw: 26, phase: "70.3 Aufbau I", dateFrom: "2026-06-22", laufVol: "~48 km", note: "Erholung nach Landshut. Sanfter Wiedereinstieg.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 12 km", detail: "Z1–Z2 · Puls 145–153 · Erholung" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m", detail: "Locker · Wiederaufbau" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 14 km", detail: "2km WU · 10km @ GA2 5:25–5:45/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+swim", icon: "🏋️", label: "Gym Upper + Swim 2000m + Rad 2:30h", detail: "4x500m + Z2–Z3 ca. 70km" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 20 km", detail: "GA1 · 5:55–6:20/km · Puls 148–162" }
-      }
-    },
-    { kw: 27, phase: "70.3 Aufbau I", dateFrom: "2026-06-29", laufVol: "~60 km", note: "Volumen steigern. Rad Richtung 90km.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 10x400m", detail: "VO2 · 3:44–3:55/km · Total ~12km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 2000m", detail: "4x500m Pause 45s" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 16 km", detail: "2km WU · 12km @ GA2 5:20–5:40/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper + Brick: Rad 80km + Run 10km", detail: "Rad 28–30km/h + Run GA2 5:25–5:45/km + Swim 2000m" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 24 km", detail: "GA1 · 5:50–6:15/km · Puls 148–162" }
-      }
-    },
-    { kw: 28, phase: "70.3 Aufbau I", dateFrom: "2026-07-06", laufVol: "~46 km", note: "Regenerationswoche -25%. See-Schwimmen zählt als Einheit.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A leicht 70%", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 8x400m", detail: "VO2 · 3:44–3:55/km · Total ~10km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower leicht + Swim 1500m", detail: "See-Schwimmen zählt!" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km", detail: "2km WU · 8km @ GA2 5:30/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 90 min", detail: "GA1 locker + Swim 1500m locker" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 18 km", detail: "GA1 · 6:00–6:25/km · Puls 151–157" }
-      }
-    },
-    { kw: 29, phase: "70.3 Aufbau II Peak", dateFrom: "2026-07-13", laufVol: "~68 km", note: "Höchste Belastung der Saison. Rad 3h+. ~17–20h/Woche.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 6x1000m", detail: "EB · 4:05–4:15/km · 400m Traben · Total ~14km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1900m", detail: "70.3 Distanz · am Stück oder 2x950m" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 18 km", detail: "2km WU · 14km @ GA2 5:20–5:40/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper + Brick: Rad 90km + Run 12km", detail: "Rad 28–30km/h + Run GA2 5:30–5:45/km + Swim 2000m Wettkampftempo · WICHTIGSTE EINHEIT" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 26 km", detail: "GA1 · 5:50–6:15/km · Puls 148–162" }
-      }
-    },
-    { kw: 30, phase: "70.3 Aufbau II Peak", dateFrom: "2026-07-20", laufVol: "~70 km", note: "Absolute Peak-Woche. Volle 70.3 Simulation Sa. ~18–22h/Woche.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 5x1200m", detail: "EB · 4:10–4:20/km · 400m Traben · Total ~15km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 2000m", detail: "Kontinuierlich · offenes Gewässer" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 16 km", detail: "2km WU · 12km @ GA2 5:20/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull (morgens kurz)", detail: "Dann Erholung" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper leicht + Brick: Rad 90km + Run 21km", detail: "VOLLE 70.3 SIM · Rad 28–30km/h · Run GA2 5:35–5:50/km + Swim 1900m WU-Sim" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 20 km locker", detail: "GA1 · Erholung nach Simulation" }
-      }
-    },
-    { kw: 31, phase: "Taper 70.3 Duisburg", dateFrom: "2026-07-27", laufVol: "~46 km", note: "Taper beginnt. Volumen -35%. Intensität in kurzen Einheiten erhalten.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 8x400m", detail: "VO2 · 3:44–3:55/km · Total ~10km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower leicht + Swim 1500m", detail: "Locker · Vertrauen" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km", detail: "2km WU · 8km @ Z3 · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull leicht", detail: "" },
-        Sa: { type: "brick", icon: "🔥", label: "Gym Upper leicht + Brick: Rad 50km + Run 8km", detail: "Wettkampftempo · Feeling testen + Swim 1500m locker" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 18 km", detail: "GA1 · 6:00–6:25/km" }
-      }
-    },
-    { kw: 32, phase: "Taper 70.3 Duisburg", dateFrom: "2026-08-03", laufVol: "~22 km", note: "Letzte Woche vor 70.3. Volumen -55%. Beine frisch. Material checken.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push leicht", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 5x400m scharf", detail: "VO2 · Total ~7km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Pull leicht + Swim 1500m", detail: "Locker · Vertrauen im Wasser" },
-        Do: { type: "run",   icon: "🏃", label: "Easy Run 8 km", detail: "GA1 · locker" },
-        Fr: { type: "bike",  icon: "🚴", label: "Rad 45 min", detail: "Sehr locker · Aktivierung" },
-        Sa: { type: "rest",  icon: "😴", label: "Ruhe", detail: "Kohlenhydrate · Material · Schlaf" },
-        So: { type: "rest",  icon: "😴", label: "Ruhe", detail: "Anreise · mentale Vorbereitung" }
-      }
-    },
-    { kw: 33, phase: "Renntag 70.3 Duisburg", dateFrom: "2026-08-10", laufVol: "~10 km", note: "Ironman 70.3 Duisburg So. Leichte Aktivierung Mo–Sa. Ziel: Sub 6h.",
-      days: {
-        Mo: { type: "rest",  icon: "😴", label: "Ruhe", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 5km + 3x100m Strides", detail: "KB · sehr locker" },
-        Mi: { type: "swim",  icon: "🏊", label: "Schwimmen 600m locker", detail: "" },
-        Do: { type: "bike",  icon: "🚴", label: "Rad 30 min sehr locker", detail: "" },
-        Fr: { type: "run",   icon: "🏃", label: "Easy Run 3 km Aktivierung", detail: "" },
-        Sa: { type: "rest",  icon: "😴", label: "Ruhe", detail: "Anreise · Essen · Schlafen" },
-        So: { type: "race",  icon: "🏁", label: "IRONMAN 70.3 DUISBURG", detail: "ZIEl SUB 6H · Swim 1,9km ~40min / Bike 90km ~3:00h / Run 21,1km ~2:00h" }
-      }
-    },
-    { kw: 34, phase: "Tegernsee HM Aufbau", dateFrom: "2026-08-17", laufVol: "~42 km", note: "Erholung nach 70.3. Lauf-Fokus. Rad + Swim reduziert.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 10 km", detail: "Z1–Z2 · Puls 145–153 · Erholung" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km", detail: "2km WU · 8km @ Z3 5:25/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 90 min GA1", detail: "" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 18 km", detail: "GA1 · 5:55–6:20/km · Puls 148–162" }
-      }
-    },
-    { kw: 35, phase: "Tegernsee HM Aufbau", dateFrom: "2026-08-24", laufVol: "~55 km", note: "HM-spezifisch. Tempo + Volumen steigern. Tegernsee ist hügelig!",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 10x400m", detail: "VO2 · 3:44–3:55/km · Total ~12km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 16 km", detail: "2km WU · 12km @ GA2 5:20–5:40/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 2h GA1", detail: "" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 22 km", detail: "GA1 · 5:50–6:15/km · Puls 148–162" }
-      }
-    },
-    { kw: 36, phase: "Tegernsee HM Aufbau", dateFrom: "2026-08-31", laufVol: "~60 km", note: "Letzte Belastungswoche. Dann 2 Wochen Taper. Hügel simulieren.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 6x800m", detail: "EB–VO2 · 3:45–4:05/km · Total ~13km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 18 km", detail: "2km WU · 14km @ GA2 5:20/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 2h Z2 Hügel", detail: "" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 24 km", detail: "GA1 · 5:50–6:15/km · Tegernsee hügelig!" }
-      }
-    },
-    { kw: 37, phase: "Taper Tegernsee", dateFrom: "2026-09-07", laufVol: "~36 km", note: "Taper. Volumen -40%. Intensität kurz erhalten.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push leicht", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 6x400m", detail: "VO2 · 3:44–3:55/km · Total ~9km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Pull leicht + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 10 km", detail: "2km WU · 6km @ Z3 · 2km CD" },
-        Fr: { type: "rest",  icon: "😴", label: "Ruhe", detail: "" },
-        Sa: { type: "bike",  icon: "🚴", label: "Rad 60 min KB locker", detail: "" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 14 km GA1 locker", detail: "" }
-      }
-    },
-    { kw: 38, phase: "Renntag Tegernsee", dateFrom: "2026-09-14", laufVol: "~18 km", note: "Rennwoche. Tegernsee HM So. B-Rennen.",
-      days: {
-        Mo: { type: "rest",  icon: "😴", label: "Ruhe", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 6km + 4x100m Strides", detail: "KB · sehr locker" },
-        Mi: { type: "rest",  icon: "😴", label: "Ruhe", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Easy Run 4 km Aktivierung", detail: "" },
-        Fr: { type: "rest",  icon: "😴", label: "Ruhe · Anreise", detail: "" },
-        Sa: { type: "rest",  icon: "😴", label: "Ruhe", detail: "Kohlenhydrate · früh schlafen" },
-        So: { type: "race",  icon: "🏁", label: "Tegernsee Halbmarathon", detail: "B-Rennen · hügelig · nach Gefühl · genießen" }
-      }
-    },
-    { kw: 39, phase: "Ultra Aufbau", dateFrom: "2026-09-21", laufVol: "~48 km", note: "Ultra-Mentalität: Zeit auf Beinen > Pace. Z2 dominant.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 12 km GA1", detail: "Erholung · Puls 140–155" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km", detail: "2km WU · 8km @ Z3 · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 2h GA1", detail: "" },
-        So: { type: "run",   icon: "🏃", label: "Long Run 22 km", detail: "GA1 · 6:00–6:20/km · Zeit auf Beinen ~2:20h" }
-      }
-    },
-    { kw: 40, phase: "Ultra Aufbau", dateFrom: "2026-09-28", laufVol: "~62 km", note: "Back-to-Back Long Runs beginnen. Sa+So beide laufen – Schlüssel für Backyard.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 8x400m", detail: "VO2 · 3:44–3:55/km · Total ~10km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 14 km Z3", detail: "5:25/km" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "run",   icon: "🏃", label: "Ultra Long Run 1: 24 km", detail: "GA1 · 6:00–6:20/km · Essen/Trinken üben" },
-        So: { type: "run",   icon: "🏃", label: "Ultra Long Run 2: 16 km", detail: "KB · 6:30–7:00/km · müde Beine · Backyard-Training" }
-      }
-    },
-    { kw: 41, phase: "Ultra Aufbau", dateFrom: "2026-10-05", laufVol: "~46 km", note: "Regenerationswoche. Back-to-Back Volumen verdauen. -25%.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 10 km GA1 locker", detail: "Erholung" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 12 km Z3", detail: "5:25–5:40/km" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "gym+bike", icon: "🚴", label: "Gym Upper + Rad 90 min GA1", detail: "" },
-        So: { type: "run",   icon: "🏃", label: "Ultra Long Run 20 km GA1 locker", detail: "Erholung" }
-      }
-    },
-    { kw: 42, phase: "Ultra Aufbau", dateFrom: "2026-10-12", laufVol: "~68 km", note: "Höchstes Back-to-Back Volumen. Sa Nachtlauf-Option.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 6x800m", detail: "EB–VO2 · 3:45–4:05/km · Total ~12km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 16 km", detail: "2km WU · 12km @ GA2 5:20/km · 2km CD" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "run",   icon: "🏃", label: "Ultra Long Run 1: 28 km", detail: "Z2 · 6:10–6:20/km · optional letzten 30min im Dunkeln · Essen alle 45min" },
-        So: { type: "run",   icon: "🏃", label: "Ultra Long Run 2: 18 km KB", detail: "Puls 130–145 · müde Beine · Pace egal" }
-      }
-    },
-    { kw: 43, phase: "Ultra Aufbau Peak", dateFrom: "2026-10-19", laufVol: "~76 km", note: "Peak-Woche Ultra. Längster Lauf der Saison. Backyard-Logistik testen.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 12 km Z2", detail: "Frisch bleiben für Wochenende" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Tempolauf 14 km Z3", detail: "5:25/km" },
-        Fr: { type: "rest",  icon: "😴", label: "Ruhe", detail: "Kohlenhydrate · früh schlafen" },
-        Sa: { type: "run",   icon: "🏃", label: "Ultra-Simulation: 34 km", detail: "Z2 · Start ~18 Uhr · 2h im Dunkeln · Essen alle 45min · Pausen testen" },
-        So: { type: "run",   icon: "🏃", label: "Recovery Run 14 km KB", detail: ">6:50/km · sehr locker · wie Backyard-Folgerunde" }
-      }
-    },
-    { kw: 44, phase: "Ultra Taper", dateFrom: "2026-10-26", laufVol: "~40 km", note: "Taper vor Backyard. Volumen -40%. Logistik finalisieren.",
-      days: {
-        Mo: { type: "gym",   icon: "🏋️", label: "Gym Push A", detail: "" },
-        Di: { type: "run",   icon: "🏃", label: "Intervalle 6x400m", detail: "VO2 · 3:44–3:55/km · Total ~9km" },
-        Mi: { type: "gym+swim", icon: "🏋️", label: "Gym Lower leicht + Swim 1500m locker", detail: "" },
-        Do: { type: "run",   icon: "🏃", label: "Easy Run 10 km GA1 locker", detail: "" },
-        Fr: { type: "gym",   icon: "🏋️", label: "Gym Pull", detail: "" },
-        Sa: { type: "run",   icon: "🏃", label: "Long Run 18 km GA1 locker", detail: "Letzte längere Einheit" },
-        So: { type: "rest",  icon: "😴", label: "Ruhe / Mobility", detail: "" }
-      }
-    },
-    { kw: 45, phase: "Backyard Projektwoche", dateFrom: "2026-11-02", laufVol: "~15 km + Backyard", note: "Mo/Di leichte Aktivierung. Dann Ruhe bis zum Start.",
-      days: {
-        Mo: { type: "run",   icon: "🏃", label: "Easy Run 6 km KB", detail: "Sehr locker · letzte Aktivierung" },
-        Di: { type: "run",   icon: "🏃", label: "Easy Run 4km + 4x100m Strides", detail: "Locker · Strides für Spritzigkeit" },
-        Mi: { type: "rest",  icon: "😴", label: "Ruhe", detail: "" },
-        Do: { type: "rest",  icon: "😴", label: "Ruhe · Vorbereitung", detail: "Essen einplanen" },
-        Fr: { type: "rest",  icon: "😴", label: "Ruhe · Material checken", detail: "Lichter · Kleidung" },
-        Sa: { type: "race",  icon: "🌙", label: "BACKYARD PROJEKT", detail: "Startzeit flexibel · 6,7km Runden · Ziel 50–100km · Start zu Hause · mit Kumpel" },
-        So: { type: "race",  icon: "🌙", label: "Backyard Fortsetzung / Erholung", detail: "Je nach Verlauf der Nacht" }
-      }
-    }
   ]
 };
 
