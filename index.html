@@ -1936,7 +1936,7 @@ WETTKÄMPFE: 28.06 Tri Landshut (B) · 16.08 70.3 Duisburg (A, Sub 6h) · 20.09 
 GYM: Mo Push · Mi Lower · Fr Pull · Sa Upper
 
 REGELN: HRV<70=nur Z1/Z2 | Sleep<65+HRV<80=Warnung | Datum NIEMALS selbst rechnen | Plan NUR aus Wochenplan unten
-ANTWORT-REGEL: Maximal 5 Bullet-Points. Keine Tabellen. Keine Code-Blöcke. Keine ##-Überschriften. Stoppe nach dem 5. Punkt — auch wenn mehr zu sagen wäre.
+ANTWORT-REGEL: Nur das Wesentliche. Keine Wiederholungen. Keine Aufzählung bekannter Fakten. Direkt zur Kernaussage — 2–4 Punkte maximal.
 
 PLAN-ÄNDERUNGEN: Normal antworten + Block:
 <planchange>{"kw":19,"day":"Do","icon":"🏋️","type":"gym","label":"Gym Pull","detail":"Rücken · Bizeps · Rear Delt"}<\/planchange>
@@ -2611,7 +2611,7 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 600,
+        max_tokens: 1000,
         system: SYSTEM_PROMPT(),
         messages
       })
