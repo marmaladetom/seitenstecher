@@ -1883,16 +1883,19 @@ const TRAINING_PLAN = {
 // ─── SYSTEM PROMPT ───
 // Build dynamic system prompt including current week from plan
 function buildCurrentWeekContext() {
-  const dayShort = ['So','Mo','Di','Mi','Do','Fr','Sa'];
   const now = new Date();
   const todayStr = now.toISOString().slice(0,10);
   let currentWeekText = '';
   let nextWeekText = '';
+  let futureWeeksText = '';
+
   for (let wi = 0; wi < TRAINING_PLAN.weeks.length; wi++) {
     const w = TRAINING_PLAN.weeks[wi];
     const start = new Date(w.dateFrom);
-    const end = new Date(start); end.setDate(end.getDate()+6);
-    if (now >= start && now <= end) {
+    const wEnd = new Date(start); wEnd.setDate(wEnd.getDate()+6);
+
+    if (now >= start && now <= wEnd) {
+      // Current week - full detail
       const dks = ['Mo','Di','Mi','Do','Fr','Sa','So'];
       const lines = dks.map((dk, i) => {
         const cellDate = new Date(start); cellDate.setDate(start.getDate()+i);
@@ -1900,31 +1903,51 @@ function buildCurrentWeekContext() {
         const dd = dateStr.slice(8)+'.'+dateStr.slice(5,7);
         const eff = getEffectiveEntry(w.kw, dk) || w.days[dk];
         const isToday = dateStr === todayStr;
-        const isDone = localStorage.getItem('sc_done_kw'+w.kw+'_'+dk) === '1' ||
-          (!localStorage.getItem('sc_done_kw'+w.kw+'_'+dk) && eff && eff.done);
+        const isDone = localStorage.getItem('sc_done_kw'+w.kw+'_'+dk) === '1';
         const extras = (() => { try { return JSON.parse(localStorage.getItem('sc_extra_kw'+w.kw+'_'+dk)||'[]'); } catch { return []; } })();
         const log = (() => { try { return JSON.parse(localStorage.getItem('sc_log_kw'+w.kw+'_'+dk)||'null'); } catch { return null; } })();
-        let line = `  ${dk} ${dd}: ${eff ? (eff.icon+' '+eff.label) : 'Ruhe'}${isToday?' ← HEUTE':isDone?' (erledigt)':''}`;
+        let line = `  ${dk} ${dd}: ${eff ? (eff.icon+' '+eff.label) : 'Ruhe'}${isToday?' ← HEUTE':isDone?' ✓':''}`;
         if (eff && eff.detail) line += ` | ${eff.detail}`;
         if (extras.length) line += ` | +Extra: ${extras.map(e=>e.label).join(', ')}`;
-        if (log && log.dist) line += ` | Gemacht: ${log.dist}km${log.pace?' @ '+log.pace+'/km':''}${log.hr?' Ø'+log.hr+'bpm':''}`;
+        if (log && log.dist) line += ` | Gemacht: ${log.dist}km${log.pace?' @'+log.pace+'/km':''}${log.hr?' Ø'+log.hr+'bpm':''}`;
         return line;
       }).join('\n');
-      currentWeekText = `KW${w.kw} (${w.phase}) · ${w.laufVol}\nHinweis: ${w.note}\n${lines}`;
-      if (wi+1 < TRAINING_PLAN.weeks.length) {
-        const wn = TRAINING_PLAN.weeks[wi+1];
-        const linesN = ['Mo','Di','Mi','Do','Fr','Sa','So'].map(dk => {
-          const eff = getEffectiveEntry(wn.kw, dk) || wn.days[dk];
-          return `  ${dk}: ${eff ? eff.icon+' '+eff.label : 'Ruhe'}`;
+      currentWeekText = `KW${w.kw} · ${w.phase} · Do=${w.doType}\n${lines}`;
+
+      // Next 3 weeks - medium detail
+      const futureLines = [];
+      for (let fwi = wi+1; fwi < Math.min(wi+4, TRAINING_PLAN.weeks.length); fwi++) {
+        const fw = TRAINING_PLAN.weeks[fwi];
+        const fStart = new Date(fw.dateFrom);
+        const fDks = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+        const fLines = fDks.map((dk, i) => {
+          const fDate = new Date(fStart); fDate.setDate(fStart.getDate()+i);
+          const dd = fDate.toISOString().slice(8,10)+'.'+fDate.toISOString().slice(5,7);
+          const eff = getEffectiveEntry(fw.kw, dk) || fw.days[dk];
+          return `  ${dk} ${dd}: ${eff ? eff.icon+' '+eff.label : 'Ruhe'}`;
         }).join('\n');
-        nextWeekText = `KW${wn.kw} (${wn.phase})\n${linesN}`;
+        futureLines.push(`KW${fw.kw} · ${fw.phase} · Do=${fw.doType}\n${fLines}`);
       }
+      nextWeekText = futureLines.join('\n\n');
+
+      // Remaining plan - compact overview
+      const remaining = [];
+      for (let rwi = wi+4; rwi < TRAINING_PLAN.weeks.length; rwi++) {
+        const rw = TRAINING_PLAN.weeks[rwi];
+        const rStart = new Date(rw.dateFrom);
+        const mo = rStart.toISOString().slice(8,10)+'.'+rStart.toISOString().slice(5,7);
+        remaining.push(`KW${rw.kw} (${mo}): ${rw.phase} · Do=${rw.doType}`);
+      }
+      if (remaining.length) {
+        futureWeeksText = '\n\nWEITERER PLAN:\n' + remaining.join('\n');
+      }
+
+      currentWeekText += futureWeeksText;
       break;
     }
   }
   return { currentWeekText, nextWeekText };
 }
-
 const SYSTEM_PROMPT_BASE = `Seitenstecher Coach für Tom. Deutsch. Präzise, keine Floskeln.
 
 PROFIL: 26J · 83kg · 186cm · HFmax 199 · LT 174bpm@4:13/km · RHR 51 · VO2max ~66
