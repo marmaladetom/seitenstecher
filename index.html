@@ -3815,7 +3815,8 @@ function renderLapsTable(laps, actType) {
           <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Dist<\/th>
           <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Zeit<\/th>
           <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">${isRun ? 'Pace' : isSwim ? '/100m' : 'km/h'}<\/th>
-          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Puls<\/th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Ø Puls<\/th>
+          <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Max<\/th>
           ${laps.some(l=>l.average_cadence) ? '<th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:400;">Kad<\/th>' : ''}
         <\/tr>
       <\/thead>
@@ -3843,6 +3844,7 @@ function renderLapsTable(laps, actType) {
       <td style="padding:6px 8px;text-align:right;">${time}<\/td>
       <td style="padding:6px 8px;text-align:right;color:var(--accent);">${pace ? pace+(isRun?'/km':'/100m') : speed ? speed+'km/h' : '—'}<\/td>
       <td style="padding:6px 8px;text-align:right;color:${hrColor};">${hr}${typeof hr==='number'?' bpm':''}<\/td>
+      <td style="padding:6px 8px;text-align:right;color:var(--muted);">${lap.max_heartrate ? Math.round(lap.max_heartrate)+' bpm' : '—'}<\/td>
       ${laps.some(l=>l.average_cadence) ? `<td style="padding:6px 8px;text-align:right;color:var(--muted);">${kad||'—'}</td>` : ''}
     <\/tr>`;
   });
@@ -3907,7 +3909,8 @@ async function analyzeCurrentActivity() {
             const p = isRun && l.average_speed ? formatPace(l.elapsed_time, l.distance) : null;
             const h = l.average_heartrate ? Math.round(l.average_heartrate) : null;
             const d = l.distance ? (l.distance/1000).toFixed(2) : '';
-            return 'L'+(i+1)+':'+d+'km'+(p?' @'+p+'/km':'')+(h?' '+h+'bpm':'');
+            const hmax = l.max_heartrate ? Math.round(l.max_heartrate) : null;
+            return 'L'+(i+1)+':'+d+'km'+(p?' @'+p+'/km':'')+(h?' Ø'+h+'bpm':'')+(hmax?'/max'+hmax+'bpm':'');
           }).join(' | ');
           lapSummary = '\nLaps: '+lines;
         }
